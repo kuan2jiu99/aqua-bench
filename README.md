@@ -1,5 +1,7 @@
 # AQUA-Bench: Beyond Finding Answers to Knowing When There Are None in Audio Question Answering
 
+🎉 **Accepted to ICASSP 2026 (Oral Presentation)**
+
 **Authors:** [Chun-Yi Kuan](https://kuan2jiu99.github.io/), [Hung-yi Lee](https://speech.ee.ntu.edu.tw/~hylee/index.php)
 
 [![arXiv](https://img.shields.io/badge/arXiv-2601.12248-b31b1b.svg)](https://arxiv.org/abs/2601.12248)
@@ -8,11 +10,27 @@
 
 ## Overview
 
-AQUA-Bench is an evaluation benchmark for **unanswerable audio question answering**. It tests whether audio-aware large language models can recognize when a question cannot be answered, rather than always producing an answer.
-
+AQUA-Bench is an evaluation benchmark for **unanswerable audio question answering**. Existing benchmarks assume every question has a correct answer, but real-world queries can be misleading, ill-posed, or irrelevant to the audio. AQUA-Bench tests whether audio-aware large language models (ALLMs) can recognize these cases instead of always forcing an answer.
+ 
+We define three unanswerable scenarios:
+- **Absent Answer Detection (AAD):** The correct option is deliberately removed from the choices.
+- **Incompatible Answer Set Detection (IASD):** The answer choices are categorically mismatched with the question.
+- **Incompatible Audio Question Detection (IAQD):** The question is irrelevant to or not grounded in the audio content.
 **Keywords:** Unanswerable questions, Audio question answering, Audio-aware large language models
+ 
+![overview](figures/overview.png)
 
-![text](figures/overview.png)
+### Key Findings
+ 
+- **Large solvable-vs-unanswerable gap:** Current ALLMs perform well on standard answerable questions but show significant accuracy drops on unanswerable ones, revealing a critical reliability blind spot.
+- **Forced-choice bias:** Models tend to always select an answer even when no valid option exists, rather than abstaining.
+- **Chain-of-Thought helps:** CoT prompting unlocks a latent ability to detect unanswerability. For example, some models recover from near-zero accuracy to substantial performance when prompted to reason step-by-step about whether the question is answerable.
+- **Phrasing matters:** Changing the wording of the unanswerable option (e.g., "None of the above" vs. "All answers are incorrect") and adding explicit guidance hints both influence model behavior, as shown in our ablation studies.
+## 🔍 Practical Examples
+ 
+We host interactive examples on our **[demo page](https://kuan2jiu99.github.io/aqua-bench/)** that illustrate typical failure modes, including hallucinations across all three unanswerable scenarios (AAD, IASD, IAQD). These examples show how models respond when faced with questions they should refuse to answer.
+ 
+> 👉 **[Explore the examples here](https://kuan2jiu99.github.io/aqua-bench/)**
 
 ## Evaluation Data
 
