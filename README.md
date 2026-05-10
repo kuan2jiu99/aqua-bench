@@ -4,7 +4,7 @@
 
 [![arXiv](https://img.shields.io/badge/arXiv-2601.12248-b31b1b.svg)](https://arxiv.org/abs/2601.12248)
 [![ICASSP 2026](https://img.shields.io/badge/ICASSP%202026-Oral-blue.svg)](https://ieeexplore.ieee.org/document/11460647/)
-[![Demo](https://img.shields.io/badge/Demo-Page-green.svg)](https://kuan2jiu99.github.io/AQUA-Bench-demo/)
+[![Demo](https://img.shields.io/badge/Demo-Page-green.svg)](https://kuan2jiu99.github.io/aqua-bench/)
 
 ## Overview
 
