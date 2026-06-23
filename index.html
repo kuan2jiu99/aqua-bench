@@ -3,606 +3,592 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AQUA-Bench Demo</title>
+  <title>AQUA-Bench · Knowing When There Are No Answers in Audio QA</title>
+  <meta name="description" content="AQUA-Bench: a benchmark for unanswerable audio question answering (AAD, IASD, IAQD). ICASSP 2026 Oral." />
+
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Noto+Serif+JP:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
   <style>
     :root {
-      --bg: #fafafa;
-      --ink: #333;
-      --accent: #5c6bc0;
-      --border: #e5e5e5;
-      --card: #fff;
+      /* warm washi paper + muted matcha/earth palette ("濁色") */
+      --paper:      #f5f3ec;
+      --paper-2:    #efece2;
+      --card:       #fffdf8;
+      --ink:        #3b3a33;
+      --ink-soft:   #6f6a5e;
+      --ink-faint:  #938d7f;
+      --line:       #e4e0d4;
+      --line-soft:  #eeeae0;
+
+      --moss:       #6f8265;  /* primary accent */
+      --moss-deep:  #54664c;
+      --moss-tint:  #eaeee2;
+
+      /* task-type earth tones */
+      --solvable:   #5f7257;
+      --solvable-t: #ebefe6;
+      --aad:        #b08a3c;
+      --aad-t:      #f4ecd8;
+      --iasd:       #5d7c8a;
+      --iasd-t:     #e6eef1;
+      --iaqd:       #b06a4f;
+      --iaqd-t:     #f4e7e1;
+
+      --ok:         #5e7f57;
+      --ok-t:       #edf2e8;
+      --no:         #b1574c;
+      --no-t:       #f6eae7;
+
+      --radius:     12px;
+      --shadow:     0 1px 2px rgba(60,58,40,.04), 0 6px 22px rgba(60,58,40,.05);
     }
+
+    html { scroll-behavior: smooth; font-size: 18px; }
 
     html, body {
-      background: var(--bg);
+      background: var(--paper);
       color: var(--ink);
-      font-family: "Noto Sans JP", "Inter", sans-serif;
-      line-height: 1.7;
-      letter-spacing: 0.3px;
-    }
-
-    .hero {
-      background: #fff;
-      box-shadow: none;
-      border-bottom: 1px solid var(--border);
-      padding-top: 2rem;
-      padding-bottom: 2rem;
-    }
-
-    .hero .title {
-      font-size: 1.9rem;
+      font-family: "Zen Kaku Gothic New", "Noto Sans JP", system-ui, sans-serif;
       font-weight: 500;
-      color: var(--ink);
+      line-height: 1.74;
+      letter-spacing: .2px;
     }
+    body { font-size: 1.02rem; }
 
-    .subtitle {
-      color: #666;
+    .display-serif { font-family: "Noto Serif JP", "Zen Kaku Gothic New", serif; }
+
+    /* ---------- sticky top nav ---------- */
+    .topnav {
+      position: sticky; top: 0; z-index: 30;
+      background: rgba(245,243,236,.86);
+      backdrop-filter: saturate(140%) blur(8px);
+      border-bottom: 1px solid var(--line);
     }
-
-    .icon-links a {
-      color: var(--accent);
-      text-decoration: none;
-      font-weight: 500;
-      font-size: 1rem;
+    .topnav .inner {
+      max-width: 1040px; margin: 0 auto;
+      display: flex; align-items: center; gap: 1rem;
+      padding: .55rem 1.1rem;
+      overflow-x: auto; white-space: nowrap;
     }
-
-    .icon-links a:hover {
-      text-decoration: underline;
+    .topnav .brand {
+      font-weight: 700; color: var(--moss-deep);
+      letter-spacing: .4px; margin-right: .4rem; flex: none;
     }
-
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      box-shadow: none;
-      margin-bottom: 2.5rem;
-      padding: 1.5rem;
+    .topnav a.navlink {
+      color: var(--ink-soft); text-decoration: none;
+      font-size: .92rem; font-weight: 500; padding: .15rem 0;
+      border-bottom: 2px solid transparent; flex: none;
     }
+    .topnav a.navlink:hover { color: var(--moss-deep); }
+    .topnav a.navlink.is-active { color: var(--moss-deep); border-bottom-color: var(--moss); }
 
-    .subcard {
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1rem;
-      background: #fff;
-      margin-top: 1.2rem;
-    }
-
-    .comment-box {
-      border-left: 3px solid var(--accent);
-      background: #f9f9f9;
-      padding: 1rem;
-      border-radius: 6px;
-      font-size: 0.95rem;
-      color: #444;
-    }
-
-    .model-pill {
-      display: inline-block;
-      padding: 0.2rem 0.7rem;
-      border: 1px solid var(--accent);
-      border-radius: 999px;
-      color: var(--accent);
-      font-weight: 500;
-      background: transparent;
-      font-size: 0.9rem;
-    }
-
-    .tag {
-      background: transparent;
-      border: 1px solid var(--accent);
-      color: var(--accent);
-      font-weight: 500;
-      border-radius: 4px;
-      padding: 0.1rem 0.4rem;
-      font-size: 0.8rem;
-    }
-
-    .table.is-compact td, .table.is-compact th {
-      padding: .5rem .7rem;
-      vertical-align: top;
-      border-color: var(--border);
-      font-size: 0.9rem;
-    }
-
-    audio {
-      width: 100%;
-      margin-top: .5rem;
-    }
-
-    figcaption {
-      color: #777;
-      font-size: 0.8rem;
+    /* ---------- hero ---------- */
+    .hero-wrap {
+      background:
+        radial-gradient(1200px 380px at 50% -120px, var(--moss-tint), transparent 70%),
+        var(--paper);
+      border-bottom: 1px solid var(--line);
+      padding: 3.2rem 1.1rem 2.6rem;
       text-align: center;
+    }
+    .badge-oral {
+      display: inline-flex; align-items: center; gap: .4rem;
+      background: var(--moss-deep); color: #fff;
+      font-size: .92rem; font-weight: 700; letter-spacing: .8px;
+      padding: .36rem .95rem; border-radius: 999px; text-transform: uppercase;
+    }
+    .hero-title {
+      font-size: clamp(2.2rem, 5vw, 3.1rem);
+      font-weight: 600; color: var(--ink);
+      margin: 1rem 0 .3rem; line-height: 1.1;
+    }
+    .drop-icon {
+      width: .82em; height: .82em; vertical-align: -.06em;
+      margin-right: .18em; display: inline-block;
+      filter: drop-shadow(0 2px 3px rgba(84,102,76,.22));
+    }
+    .drop-nav { width: 1.05em; height: 1.05em; vertical-align: -.2em; display: inline-block; }
+
+    .hero-sub {
+      max-width: 72rem; margin: .25rem auto 0;
+      font-size: clamp(1.02rem, 1.9vw, 1.15rem);
+      color: var(--ink-soft); font-weight: 500;
+    }
+    .hero-authors { margin-top: 1.1rem; color: var(--ink); font-weight: 500; }
+    .hero-affil  { color: var(--ink-faint); font-size: .92rem; }
+
+    .link-row { margin-top: 1.4rem; display: flex; gap: .6rem; justify-content: center; flex-wrap: wrap; }
+    .btn-link {
+      display: inline-flex; align-items: center; gap: .45rem;
+      background: var(--card); color: var(--moss-deep);
+      border: 1px solid var(--line); border-radius: 999px;
+      padding: .5rem 1.15rem; font-size: 1.02rem; font-weight: 600;
+      text-decoration: none; transition: all .15s ease;
+    }
+    .btn-link:hover { border-color: var(--moss); background: var(--moss-tint); color: var(--moss-deep); }
+
+    /* ---------- sections ---------- */
+    .wrap { max-width: 1040px; margin: 0 auto; padding: 0 1.1rem; }
+    .sec  { padding: 3.4rem 0 1rem; scroll-margin-top: 64px; }
+    .sec-head {
+      display: flex; align-items: baseline; gap: .7rem;
+      margin-bottom: 1.4rem;
+    }
+    .sec-kicker {
+      font-size: 1.1rem; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; color: var(--moss);
+    }
+    .sec-title {
+      font-family: "Noto Serif JP", serif;
+      font-size: 1.8rem; font-weight: 600; color: var(--ink);
+    }
+    .lead { color: var(--ink-soft); max-width: none; }
+
+    .card-soft {
+      background: var(--card); border: 1px solid var(--line);
+      border-radius: var(--radius); box-shadow: var(--shadow);
+      padding: 1.4rem 1.5rem;
+    }
+
+    figure.fig { margin: 0; }
+    figure.fig img {
+      width: 100%; border-radius: 10px; border: 1px solid var(--line);
+      background: #fff; object-fit: contain;
+    }
+    figcaption {
+      color: var(--ink-faint); font-size: .92rem; text-align: center;
+      margin-top: .7rem; line-height: 1.6;
+    }
+    img.zoomable { cursor: zoom-in; transition: filter .15s ease; }
+    img.zoomable:hover { filter: brightness(.96); }
+    .zoom-hint {
+      display: inline-flex; align-items: center; gap: .35rem;
+      font-size: .85rem; color: var(--moss-deep); font-weight: 600;
       margin-top: .5rem;
     }
 
-    img {
-      border-radius: 6px;
-      object-fit: contain;
+    /* ---------- lightbox ---------- */
+    .lightbox {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(40,38,30,.84); backdrop-filter: blur(3px);
+      display: none; align-items: center; justify-content: center; padding: 2.5rem 1.5rem;
+    }
+    .lightbox.open { display: flex; }
+    .lightbox img {
+      max-width: 94vw; max-height: 88vh; border-radius: 10px;
+      background: #fff; box-shadow: 0 18px 60px rgba(0,0,0,.45);
+    }
+    .lightbox .lb-close {
+      position: absolute; top: 1rem; right: 1.4rem;
+      width: 2.6rem; height: 2.6rem; border-radius: 50%;
+      background: rgba(255,255,255,.14); color: #fff; border: 1px solid rgba(255,255,255,.3);
+      font-size: 1.5rem; line-height: 1; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .lightbox .lb-close:hover { background: rgba(255,255,255,.26); }
+    .lightbox .lb-cap {
+      position: absolute; bottom: 1.1rem; left: 0; right: 0; text-align: center;
+      color: rgba(255,255,255,.85); font-size: .9rem; padding: 0 1.5rem;
     }
 
+    /* ---------- "three settings" explainer ---------- */
+    .setting-card {
+      background: var(--card); border: 1px solid var(--line);
+      border-radius: var(--radius); padding: 1.25rem 1.3rem;
+      height: 100%; box-shadow: var(--shadow);
+      border-top: 3px solid var(--moss);
+    }
+    .setting-card.s-aad  { border-top-color: var(--aad); }
+    .setting-card.s-iasd { border-top-color: var(--iasd); }
+    .setting-card.s-iaqd { border-top-color: var(--iaqd); }
+    .setting-card h4 { font-weight: 700; font-size: 1.05rem; margin-bottom: .15rem; color: var(--ink); }
+    .setting-card .full { color: var(--ink-faint); font-size: .9rem; margin-bottom: .6rem; }
+    .setting-card p.def { color: var(--ink-soft); font-size: 1.02rem; font-weight: 500; }
+    .setting-card .eg {
+      margin-top: .8rem; padding-top: .7rem; border-top: 1px dashed var(--line);
+      font-size: .92rem; color: var(--ink-soft);
+    }
+    .setting-card .eg b { color: var(--ink); font-weight: 700; }
+
+    /* ---------- task badges ---------- */
+    .tbadge {
+      display: inline-flex; align-items: center; gap: .35rem;
+      font-size: .82rem; font-weight: 700; letter-spacing: .4px;
+      padding: .2rem .6rem; border-radius: 6px;
+      border: 1px solid transparent;
+    }
+    .t-solvable { color: var(--solvable); background: var(--solvable-t); border-color: #d6dfcb; }
+    .t-aad      { color: var(--aad);      background: var(--aad-t);      border-color: #e7d6ad; }
+    .t-iasd     { color: var(--iasd);     background: var(--iasd-t);     border-color: #cbdbe2; }
+    .t-iaqd     { color: var(--iaqd);     background: var(--iaqd-t);     border-color: #e7cdc1; }
+
+    /* ---------- example controls ---------- */
+    .controls {
+      position: sticky; top: 49px; z-index: 20;
+      background: rgba(245,243,236,.92); backdrop-filter: blur(6px);
+      border: 1px solid var(--line); border-radius: 999px;
+      padding: .5rem .7rem; margin-bottom: 1.6rem;
+      display: flex; flex-wrap: wrap; align-items: center; gap: .4rem;
+    }
+    .controls .lbl { font-size: .8rem; color: var(--ink-faint); margin: 0 .3rem 0 .35rem; font-weight: 600; }
+    .chip {
+      cursor: pointer; user-select: none;
+      font-size: .95rem; font-weight: 600; color: var(--ink-soft);
+      background: transparent; border: 1px solid var(--line);
+      border-radius: 999px; padding: .25rem .8rem; transition: all .12s ease;
+    }
+    .chip:hover { border-color: var(--moss); color: var(--moss-deep); }
+    .chip.is-on { background: var(--moss-deep); border-color: var(--moss-deep); color: #fff; }
+    .legend { margin-left: auto; display: flex; gap: .9rem; font-size: .8rem; color: var(--ink-faint); }
+    .legend i.fa-circle-check { color: var(--ok); }
+    .legend i.fa-circle-xmark { color: var(--no); }
+
+    /* ---------- example card ---------- */
+    .ex {
+      background: var(--card); border: 1px solid var(--line);
+      border-radius: var(--radius); box-shadow: var(--shadow);
+      padding: 1.4rem 1.5rem; margin-bottom: 2rem;
+      scroll-margin-top: 110px;
+    }
+    .ex-head { display: flex; align-items: center; flex-wrap: wrap; gap: .6rem; margin-bottom: .3rem; }
+    .ex-num {
+      font-family: "Noto Serif JP", serif; font-weight: 600;
+      color: var(--moss-deep); font-size: 1.35rem;
+    }
+    .ex-src {
+      font-size: .76rem; color: var(--ink-faint); font-weight: 600;
+      background: var(--paper-2); border: 1px solid var(--line);
+      padding: .12rem .5rem; border-radius: 6px;
+    }
+
+    .block {
+      border: 1px solid var(--line-soft); border-radius: 10px;
+      padding: 1.1rem 1.15rem; margin-top: 1.1rem; background: #fffefb;
+    }
+    .block-head { display: flex; align-items: center; gap: .55rem; flex-wrap: wrap; margin-bottom: .6rem; }
+    .block-label { font-weight: 700; color: var(--ink); font-size: 1.05rem; }
+    .q-text {
+      color: var(--ink); font-size: 1.04rem; font-weight: 500;
+      background: var(--paper); border: 1px solid var(--line-soft);
+      border-radius: 8px; padding: .7rem .85rem;
+    }
+    .q-text .guide { display:block; margin-top: .3rem; color: var(--ink-faint); font-size: .92rem; font-style: italic; }
+
+    .media-row {
+      display: flex; align-items: center; gap: .8rem; flex-wrap: wrap;
+      margin: .75rem 0 .2rem;
+    }
+    .audio-box {
+      display: inline-flex; align-items: center; gap: .55rem;
+      background: var(--moss-tint); border: 1px solid #d8e0cd;
+      border-radius: 10px; padding: .35rem .55rem;
+    }
+    .audio-box i { color: var(--moss-deep); }
+    audio { width: 260px; max-width: 60vw; height: 34px; }
+    .expect {
+      font-size: .92rem; color: var(--ink-soft); font-weight: 500;
+    }
+    .expect b { color: var(--ok); font-weight: 700; }
+
+    /* ---------- response grid ---------- */
+    .resp-grid {
+      margin-top: .9rem;
+      display: grid; gap: .7rem;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+    }
+    @media (max-width: 720px) { .resp-grid { grid-template-columns: 1fr; } }
+    .resp {
+      border: 1px solid var(--line); border-left-width: 3px;
+      border-radius: 8px; padding: .65rem .8rem; background: #fff;
+    }
+    .resp.is-ok { border-left-color: var(--ok); background: linear-gradient(0deg, var(--ok-t), #fff 60%); }
+    .resp.is-no { border-left-color: var(--no); background: linear-gradient(0deg, var(--no-t), #fff 60%); }
+    .resp-head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-bottom: .35rem; }
+    .model-pill {
+      display: inline-flex; align-items: center; gap: .4rem;
+      font-weight: 700; font-size: .98rem; color: var(--ink);
+    }
+    .model-pill .dot { width: .65rem; height: .65rem; border-radius: 50%; flex: none; }
+    .verdict { font-size: .88rem; font-weight: 700; display: inline-flex; align-items: center; gap: .3rem; }
+    .verdict.is-ok { color: var(--ok); }
+    .verdict.is-no { color: var(--no); }
+    .resp-text {
+      font-size: 1rem; color: var(--ink-soft); font-weight: 500;
+      white-space: pre-wrap; word-break: break-word;
+    }
+    .resp-text strong { color: var(--ink); font-weight: 700; }
+
+    /* ---------- analysis / comment ---------- */
+    .analysis {
+      margin-top: 1.2rem; border-left: 3px solid var(--moss);
+      background: var(--moss-tint); border-radius: 0 10px 10px 0;
+      padding: 1rem 1.2rem; font-size: 1rem; color: var(--ink);
+    }
+    .analysis .a-title { font-weight: 700; color: var(--moss-deep); display: block; margin-bottom: .25rem; }
+
+    /* ---------- prose / data construction ---------- */
+    .prose h3 {
+      font-weight: 700; color: var(--ink); font-size: 1.12rem;
+      border-left: 4px solid var(--moss); padding-left: .55rem; margin: 1.6rem 0 .6rem;
+    }
+    .prose p { color: var(--ink-soft); }
+    .prose strong { color: var(--ink); }
     pre {
-      background: #f7f7f7;
-      border-radius: 6px;
-      border: 1px solid #eaeaea;
-      padding: 0.8rem;
-      font-size: 0.9rem;
-      overflow-x: auto;
+      background: #faf8f1; border: 1px solid var(--line);
+      border-radius: 8px; padding: .9rem 1.1rem; font-size: .95rem;
+      overflow-x: auto; color: var(--ink); line-height: 1.65;
+    }
+    details { margin-top: .6rem; }
+    details > summary {
+      cursor: pointer; color: var(--moss-deep); font-weight: 700;
+      font-size: 1.02rem; list-style: none;
+    }
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary::before { content: "▸ "; color: var(--moss); }
+    details[open] > summary::before { content: "▾ "; }
+    details > summary:hover { text-decoration: underline; }
+
+    .chips-inline { display: flex; flex-wrap: wrap; gap: .4rem; margin: .3rem 0 .6rem; }
+    .chips-inline span {
+      font-size: .92rem; background: var(--paper-2); border: 1px solid var(--line);
+      border-radius: 6px; padding: .12rem .5rem; color: var(--ink-soft);
     }
 
-    details summary {
-      cursor: pointer;
-      color: var(--accent);
-      font-weight: 500;
+    /* ---------- citation ---------- */
+    .cite-box { position: relative; }
+    .copy-btn {
+      position: absolute; top: .6rem; right: .6rem;
+      background: var(--card); border: 1px solid var(--line); border-radius: 8px;
+      color: var(--moss-deep); font-size: .8rem; font-weight: 600;
+      padding: .25rem .6rem; cursor: pointer;
     }
+    .copy-btn:hover { background: var(--moss-tint); }
 
-    details summary:hover {
-      text-decoration: underline;
-    }
+    .refs ol { color: var(--ink-soft); padding-left: 1.2rem; }
+    .refs li { margin-bottom: .45rem; font-size: .92rem; }
+    .refs a { color: var(--moss-deep); }
 
-    .section {
-      padding-top: 3rem;
-      padding-bottom: 3rem;
+    footer {
+      border-top: 1px solid var(--line); margin-top: 3rem;
+      padding: 2rem 1.1rem; text-align: center; color: var(--ink-faint); font-size: .88rem;
     }
-
-    h3.title.is-4 {
-      font-weight: 500;
-      border-left: 4px solid var(--accent);
-      padding-left: .6rem;
-    }
+    footer a { color: var(--moss-deep); text-decoration: none; }
   </style>
-
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-  />
 </head>
 <body>
 
-  <section class="hero">
-    <div class="hero-body has-text-centered">
-      <div class="container">
-        <h1 class="title" style="font-size: 2.8rem;">
-            💦 AQUA-Bench: Beyond Finding Answers to Knowing When There Are None in Audio Question Answering
-        </h1>
-        <br>
-        <p class="subtitle">Chun-Yi Kuan & Hung-yi Lee · National Taiwan University</p>
-        <div class="icon-links mt-4">
-          <a href="https://github.com/kuan2jiu99/aqua-bench" target="_blank"><i class="fab fa-github"></i> GitHub</a> &nbsp;&nbsp;
-          <a href="https://github.com/kuan2jiu99/aqua-bench" target="_blank"><i class="fas fa-database"></i> Dataset</a> &nbsp;&nbsp;
-          <a href="https://arxiv.org/abs/2601.12248" target="_blank"><i class="fas fa-file-alt"></i> Paper</a>
+  <!-- reusable water-drop icon -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient id="dropGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#809373" />
+        <stop offset="1" stop-color="#54664c" />
+      </linearGradient>
+      <symbol id="dropSymbol" viewBox="0 0 24 24">
+        <path d="M12 2.4C12 2.4 5 10.4 5 15.4A7 7 0 1 0 19 15.4C19 10.4 12 2.4 12 2.4Z" fill="url(#dropGrad)" />
+        <ellipse cx="9.2" cy="14.8" rx="1.55" ry="2.5" fill="#ffffff" opacity="0.4" transform="rotate(-22 9.2 14.8)" />
+      </symbol>
+    </defs>
+  </svg>
+
+  <!-- ================= TOP NAV ================= -->
+  <nav class="topnav">
+    <div class="inner">
+      <span class="brand"><svg class="drop-nav" aria-hidden="true"><use href="#dropSymbol" /></svg> AQUA-Bench</span>
+      <a class="navlink" href="#overview">Overview</a>
+      <a class="navlink" href="#settings">Settings</a>
+      <a class="navlink" href="#examples">Examples</a>
+      <a class="navlink" href="#results">Results</a>
+      <a class="navlink" href="#data">Data</a>
+      <a class="navlink" href="#cite">Cite</a>
+      <a class="navlink" href="#refs">References</a>
+    </div>
+  </nav>
+
+  <!-- ================= HERO ================= -->
+  <header class="hero-wrap">
+    <span class="badge-oral"><i class="fas fa-microphone-lines"></i> ICASSP 2026 · Oral</span>
+    <h1 class="hero-title display-serif"><svg class="drop-icon" aria-hidden="true"><use href="#dropSymbol" /></svg>AQUA-Bench</h1>
+    <p class="hero-sub">Beyond Finding Answers to <em>Knowing When There Are None</em> in Audio Question Answering</p>
+    <p class="hero-authors">Chun-Yi Kuan &nbsp;·&nbsp; Hung-yi Lee</p>
+    <p class="hero-affil">National Taiwan University</p>
+    <div class="link-row">
+      <a class="btn-link" href="https://arxiv.org/abs/2601.12248" target="_blank" rel="noopener"><i class="fas fa-file-lines"></i> Paper</a>
+      <a class="btn-link" href="https://github.com/kuan2jiu99/aqua-bench/" target="_blank" rel="noopener"><i class="fas fa-database"></i> Dataset</a>
+      <a class="btn-link" href="https://ieeexplore.ieee.org/document/11460647/" target="_blank" rel="noopener"><i class="fas fa-book"></i> IEEE</a>
+    </div>
+  </header>
+
+  <!-- ================= OVERVIEW ================= -->
+  <section id="overview" class="sec">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="sec-kicker">01</span>
+        <h2 class="sec-title">Overview</h2>
+      </div>
+
+      <p class="lead" style="margin-bottom:1.4rem;">
+        Existing audio QA benchmarks assume every question has a correct answer. But real queries can be
+        misleading, ill-posed, or simply ungrounded in the audio. <b>AQUA-Bench</b> tests whether
+        audio-aware large language models (ALLMs) can recognize these cases — and abstain — instead of
+        always forcing an answer.
+      </p>
+
+      <figure class="fig card-soft" style="max-width:920px;margin:0 auto 1.5rem;padding:1rem;">
+        <img src="assets/images/overview26-v2.png" alt="AQUA-Bench overview figure" />
+        <figcaption>Figure 1. AQUA-Bench overview — solvable questions plus three unanswerable settings (AAD, IASD, IAQD) across diverse audio types.</figcaption>
+      </figure>
+
+      <div class="columns is-multiline">
+        <div class="column is-4">
+          <div class="card-soft" style="height:100%;">
+            <p style="font-weight:700;color:var(--moss-deep);"><i class="fas fa-bullseye"></i> &nbsp;A new benchmark</p>
+            <p style="color:var(--ink-soft);font-size:.94rem;margin-top:.4rem;">A benchmark for how models handle <b>unanswerable</b> audio questions across AAD, IASD, and IAQD settings.</p>
+          </div>
+        </div>
+        <div class="column is-4">
+          <div class="card-soft" style="height:100%;">
+            <p style="font-weight:700;color:var(--moss-deep);"><i class="fas fa-layer-group"></i> &nbsp;Diverse audio</p>
+            <p style="color:var(--ink-soft);font-size:.94rem;margin-top:.4rem;">Test sets spanning <b>animal</b>, <b>vocal</b>, and <b>instrumental</b> sounds, built from established source datasets.</p>
+          </div>
+        </div>
+        <div class="column is-4">
+          <div class="card-soft" style="height:100%;">
+            <p style="font-weight:700;color:var(--moss-deep);"><i class="fas fa-triangle-exclamation"></i> &nbsp;A reliability gap</p>
+            <p style="color:var(--ink-soft);font-size:.94rem;margin-top:.4rem;">Current ALLMs handle solvable cases well but <b>often fail to detect unanswerable ones</b> — a key reliability blind spot.</p>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <section class="section">
-    <div class="container has-text-centered">
-      <figure class="subcard" style="max-width: 960px; margin: 2rem auto;">
-        <img src="assets/images/overview26-v2.png" alt="Overview Figure" />
-        <figcaption>Figure 1. AQUA-Bench overview.</figcaption>
-      </figure>
-      <div class="content has-text-left" style="max-width: 800px; margin: auto; font-size: 1.2rem;">
-        <ul>
-          <li>We introduce AQUA-Bench, a benchmark for assessing how models handle unanswerable audio questions across AAD, IASD, and IAQD settings.</li>
-          <li>We construct test sets spanning diverse audio types including animal, vocal, and instrumental sounds.</li>
-          <li>Experiments reveal that while current ALLMs handle solvable cases well, they often fail to detect unanswerable ones, highlighting a key reliability gap.</li>
-        </ul>
+  <!-- ================= THREE SETTINGS ================= -->
+  <section id="settings" class="sec">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="sec-kicker">02</span>
+        <h2 class="sec-title">The Three Unanswerable Settings</h2>
       </div>
-            
+      <p class="lead" style="margin-bottom:1.4rem;">
+        Every audio clip is paired with a normal <span class="tbadge t-solvable">SOLVABLE</span> question (a valid
+        answer exists) and three unanswerable variants. In all three, the correct response is to
+        <b>abstain</b> — choosing <i>“None of the above”</i> or <i>“Unanswerable”</i>.
+      </p>
+
+      <div class="columns is-multiline">
+        <div class="column is-4">
+          <div class="setting-card s-aad">
+            <h4><span class="tbadge t-aad">AAD</span></h4>
+            <p class="full">Absent Answer Detection</p>
+            <p class="def">The correct option is deliberately <b>removed</b> from the choices, so none of the listed options is right.</p>
+            <p class="eg"><b>Audio:</b> a cow mooing &nbsp;·&nbsp; <b>Options:</b> Pig / Dog / Crow / Rooster / <i>None of the above</i> → answer: <b>None of the above</b></p>
+          </div>
+        </div>
+        <div class="column is-4">
+          <div class="setting-card s-iasd">
+            <h4><span class="tbadge t-iasd">IASD</span></h4>
+            <p class="full">Incompatible Answer Set Detection</p>
+            <p class="def">The answer choices are from a <b>categorically mismatched</b> set — they don't even belong to the question's domain.</p>
+            <p class="eg"><b>Audio:</b> a guitar &nbsp;·&nbsp; <b>Options:</b> Champagne / Sencha / Umeshu / Cappuccino / <i>None of the above</i> → answer: <b>None of the above</b></p>
+          </div>
+        </div>
+        <div class="column is-4">
+          <div class="setting-card s-iaqd">
+            <h4><span class="tbadge t-iaqd">IAQD</span></h4>
+            <p class="full">Incompatible Audio–Question Detection</p>
+            <p class="def">The <b>question itself</b> is irrelevant to or not grounded in the audio, so it cannot be answered from listening.</p>
+            <p class="eg"><b>Audio:</b> a guitar &nbsp;·&nbsp; <b>Question:</b> “Which city is the instrument in?” → answer: <b>Unanswerable</b></p>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
-  <section class="section">
-    <div class="container" id="root"></div>
+  <!-- ================= EXAMPLES ================= -->
+  <section id="examples" class="sec">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="sec-kicker">03</span>
+        <h2 class="sec-title">Model Responses, Side by Side</h2>
+      </div>
+      <p class="lead" style="margin-bottom:1.2rem;">
+        Each example takes one audio clip and asks all four question types. Cards are marked
+        <span style="color:var(--ok);font-weight:700;">correct</span> /
+        <span style="color:var(--no);font-weight:700;">incorrect</span> against the expected answer.
+        Use the filter to focus on a single setting.
+      </p>
+
+      <div class="controls" id="controls">
+        <span class="lbl">Filter</span>
+        <span class="chip is-on" data-filter="all">All</span>
+        <span class="chip" data-filter="Solvable">Solvable</span>
+        <span class="chip" data-filter="AAD">AAD</span>
+        <span class="chip" data-filter="IASD">IASD</span>
+        <span class="chip" data-filter="IAQD">IAQD</span>
+        <span class="legend">
+          <span><i class="fas fa-circle-check"></i> correct</span>
+          <span><i class="fas fa-circle-xmark"></i> incorrect</span>
+        </span>
+      </div>
+
+      <div id="root"></div>
+    </div>
   </section>
 
-  <script>
-    // Render data (same as before)
-    // ↓ Keep your EXAMPLES script block unchanged here ↓
-    const EXAMPLES = [
-      {
-        id: 1,
-        title: "Example1 🐾",
-        comment: `Solvable: All models correctly identified the cow; GPT-4o-Audio and BALSa-MA gave the clearest reasoning, while Qwen2.5-Omni, Audio Flamingo 3, and Gemini-2.5-Flash were brief but correct.
-AAD: Gemini-2.5-Flash, GPT-4o-Audio, and BALSa-MA correctly chose (e) None of the above; Qwen2.5-Omni and Audio Flamingo 3 picked a wrong animal, showing difficulty when the true class is absent. 
-IAQD: Qwen2.5-Omni, Gemini-2.5-Flash, GPT-4o-Audio, and BALSa-MA answered (e) Unanswerable; Audio Flamingo 3 hallucinated an item (“Cup”).      
-IASD: Most models (Qwen2.5-Omni, Gemini-2.5-Flash, GPT-4o-Audio, BALSa-MA) recognized the incompatible options and chose (e); Audio Flamingo 3 picked “River,” indicating schema confusion. Overall: Strong on solvables; robustness gaps appear in AAD and when options/questions are mismatched, with Audio Flamingo 3 most prone to hallucination.`,
-        blocks: [
-          {
-            label: "Animal Sound Track → Solvable",
-            question: `What animal is featured in the sound clip? (a) Cow (b) Frog (c) Hen (d) Lion (e) Bird
-Choose one of the choices shown.`,
-            type: "Solvable",
-            source: "ESC-50",
-            audio: "assets/audios/4-181955-C-3.wav",
-            models: [
-              { name: "Qwen2.5-Omni", resp: `(a) Cow)` },
-              { name: "Audio Flamingo 3", resp: `(A) Cow` },
-              { name: "Gemini-2.5-Flash", resp: `(a) Cow` },
-              { name: "GPT-4o-Audio", resp: `The animal featured in the sound clip is a cow. The correct choice is (a) Cow.` },
-              { name: "BALSa-MA", resp: `(a) Cow` },
-            ],
-          },
-          {
-            label: "Animal Sound Track → AAD",
-            question: `Which of the following animals is heard in the clip? (a) Pig (b) Dog (c) Crow (d) Rooster (e) None of the above
-You may pick one from the provided options.`,
-            type: "AAD",
-            source: "ESC-50",
-            audio: "assets/audios/4-181955-C-3.wav",
-            models: [
-              { name: "Qwen2.5-Omni", resp: `(c) Crow)` },
-              { name: "Audio Flamingo 3", resp: `(A) Pig` },
-              { name: "Gemini-2.5-Flash", resp: `The animal heard in the clip is a **cow**.
-
-Therefore, the correct option is **(e) None of the above**.` },
-              { name: "GPT-4o-Audio", resp: `The sound in the clip is of a cow, which is not one of the provided options. Therefore, the correct answer is (e) None of the above.` },
-              { name: "BALSa-MA", resp: `The sound described is a **cow mooing**. Among the options provided:
-
-- (a) Hen: A hen would make a clucking or crowing sound, not a moo.
-- (b) Cat: A cat would make a meowing sound, not a moo.
-- (c) Horse: A horse would make a neighing sound, not a moo.
-- (d) Bird: A bird would make a chirping or singing sound, not a moo.
-- (e) None of the above: This is correct because the sound described is a cow mooing, and none of the other options match this sound.
-
-**Answer: (e) None of the above**.` },
-            ],
-          },
-          {
-            label: "Animal Sound Track → IASD",
-            question: `Based on the audio, which animal is making the noise? (a) Desert (b) Hospital (c) Mountain (d) River (e) None of the above
-Make your choice from the options above.`,
-            type: "IASD",
-            source: "ESC-50",
-            audio: "assets/audios/4-181955-C-3.wav",
-            models: [
-              { name: "Qwen2.5-Omni", resp: `(e) None of the above` },
-              { name: "Audio Flamingo 3", resp: `(D) River` },
-              { name: "Gemini-2.5-Flash", resp: `(e) None of the above` },
-              { name: "GPT-4o-Audio", resp: `The sound in the audio is a cow mooing, which is not specifically tied to any of the listed environments like desert, hospital, mountain, or river. Therefore, the correct choice is (e) None of the above.` },
-              { name: "BALSa-MA", resp: `The sound described is a cow mooing. A cow is an animal, not a desert, hospital, mountain, or river. Therefore, the correct answer is:
-
-(e) None of the above` },
-            ],
-          },
-          {
-            label: "Animal Sound Track → IAQD",
-            question: `What item is close to the animal in the recording? (a) Book (b) Table (c) Cup (d) Flower (e) Unanswerable
-Pick your answer from the choices provided.`,
-            type: "IAQD",
-            source: "ESC-50",
-            audio: "assets/audios/4-181955-C-3.wav",
-            models: [
-              { name: "Qwen2.5-Omni", resp: `(e) Unanswerable)` },
-              { name: "Audio Flamingo 3", resp: `(C) Cup` },
-              { name: "Gemini-2.5-Flash", resp: `(e) Unanswerable` },
-              { name: "GPT-4o-Audio", resp: `e) Unanswerable` },
-              { name: "BALSa-MA", resp: `The recording contains the sound of a cow mooing. The question asks what item is close to the animal in the recording. Since the audio only includes the sound of the cow and no additional sounds or descriptions of other items, it is not possible to determine what item is close to the cow based on the information provided.
-
-Answer: (e) Unanswerable` },
-            ],
-          },
-        ],
-      },
-      {
-        id: 2,
-        title: "Example2 🎵",
-        comment: `Solvable: All models correctly identified the acoustic guitar. AAD: Only Qwen2.5-Omni and Gemini-2.5-Flash selected (e) None of the above; GPT-4o-Audio and BALSa-MA misheard it as harmonica, and Audio Flamingo 3 forced “Keyboard,” showing a tendency to pick the nearest listed class. IAQD: Qwen2.5-Omni, Gemini-2.5-Flash, GPT-4o-Audio, and BALSa-MA correctly chose (e) Unanswerable; Audio Flamingo 3 hallucinated a city (“Sapporo”). IASD: Gemini-2.5-Flash, GPT-4o-Audio, and BALSa-MA correctly chose (e) None of the above; Qwen2.5-Omni answered “Sencha,” and Audio Flamingo 3 answered “Guitar” (not in options), revealing poor option checking. Overall: Unanswerable handling is mixed; Gemini-2.5-Flash is most consistent, while others—especially Audio Flamingo 3—often overcommit.`,
-        blocks: [
-          {
-            label: "Musical Instrument Track → Solvable",
-            question: `Which instrumental sound can be heard in the recording? (a) Violin (b) Trumpet (c) Acoustic Guitar (d) Harmonica (e) Saxophone
-Choose one of the choices shown.`,
-            type: "Solvable",
-            source: "Music Instrument Sounds Dataset",
-            audio: "assets/audios/Acoustic_Guitar-2940.wav",
-            models: [
-              { name: "Qwen2.5-Omni", resp: `(c) Acoustic Guitar)` },
-              { name: "Audio Flamingo 3", resp: `Based on the distinct plucked string sound and the overall acoustic texture, the instrument heard is clearly an acoustic guitar. Therefore, the correct answer is: **(c) Acoustic Guitar**` },
-              { name: "Gemini-2.5-Flash", resp: `(c) Acoustic Guitar` },
-              { name: "GPT-4o-Audio", resp: `The instrumental sound that can be heard in the recording is (c) Acoustic Guitar.` },
-              { name: "BALSa-MA", resp: `The instrumental sound that can be heard in the recording is (c) Acoustic Guitar.` },
-            ],
-          },
-          {
-            label: "Musical Instrument Track → AAD",
-            question: `Which musical instrument is responsible for the sound in the audio? (a) Harmonica (b) Keyboard (c) Flute (d) Clarinet (e) None of the above
-You may pick one from the provided options.`,
-            type: "AAD",
-            source: "Music Instrument Sounds Dataset",
-            audio: "assets/audios/Acoustic_Guitar-2940.wav",
-            models: [
-              { name: "Qwen2.5-Omni", resp: `(e) None of the above` },
-              { name: "Audio Flamingo 3", resp: `The audio features a melodic line played on a keyboard instrument. The sound is characteristic of a synthesizer or digital keyboard, which is not a harmonica, flute, or clarinet. Therefore, the correct answer is: **(b) Keyboard**` },
-              { name: "Gemini-2.5-Flash", resp: `(e) None of the above` },
-              { name: "GPT-4o-Audio", resp: `The sound in the audio is produced by a harmonica. So, the correct answer is (a) Harmonica.` },
-              { name: "BALSa-MA", resp: `The sound described in the audio is that of an **harmonica**. The harmonica is a free-reed wind instrument, and its sound is characterized by a distinct, resonant tone that is easily recognizable.
-
-Therefore, the correct answer is: 
-**(a) Harmonica**.` },
-            ],
-          },
-          {
-            label: "Musical Instrument Track → IASD",
-            question: `The sound in the audio corresponds to which kind of musical instrument? (a) Champagne (b) Sencha (c) Umeshu (d) Cappuccino (e) None of the above
-Make your choice from the options above.`,
-            type: "IASD",
-            source: "Music Instrument Sounds Dataset",
-            audio: "assets/audios/Acoustic_Guitar-2940.wav",
-            models: [
-              { name: "Qwen2.5-Omni", resp: `(b) Sencha)` },
-              { name: "Audio Flamingo 3", resp: `The audio features a plucked string instrument with a distinct timbre. This sound is characteristic of a guitar. Therefore, the correct answer is: **(a) Guitar**` },
-              { name: "Gemini-2.5-Flash", resp: `(e) None of the above` },
-              { name: "GPT-4o-Audio", resp: `It sounds like a string instrument, so the correct choice is (e) None of the above.` },
-              { name: "BALSa-MA", resp: `The sound in the audio corresponds to an **acoustic guitar**. None of the options (a) Champagne, (b) Sencha, (c) Umeshu, (d) Cappuccino, or (e) None of the above correctly describe the sound of an acoustic guitar. However, since (e) is "None of the above," and the correct answer is not listed in the options, the correct choice is:
-
-**(e) None of the above**.` },
-            ],
-          },
-          {
-            label: "Musical Instrument Track → IAQD",
-            question: `Which city is the musical instrument in? (a) Osaka (b) Sapporo (c) Phnom Penh (d) Istanbul (e) Unanswerable
-Pick your answer from the choices provided.`,
-            type: "IAQD",
-            source: "Music Instrument Sounds Dataset",
-            audio: "assets/audios/Acoustic_Guitar-2940.wav",
-            models: [
-              { name: "Qwen2.5-Omni", resp: `(e) Unanswerable` },
-              { name: "Audio Flamingo 3", resp: `The audio features a solo acoustic guitar performance. The provided answer states that the instrument is located in Sapporo. Therefore, the correct answer is: **(b) Sapporo**` },
-              { name: "Gemini-2.5-Flash", resp: `The audio contains only music and no information about any city. Therefore, the question is unanswerable from the provided audio.
-
-(e) Unanswerable` },
-              { name: "GPT-4o-Audio", resp: `The audio does not provide enough information to determine the city. So the answer is (e) Unanswerable.` },
-              { name: "BALSa-MA", resp: `The audio describes an **acoustic guitar**, which is a musical instrument. However, the question asks which city the instrument is in, and there is no information provided in the audio that indicates a specific city. 
-
-Therefore, the correct answer is: 
-**(e) Unanswerable**.` },
-            ],
-          },
-        ],
-      },
-      {
-        id: 3,
-        title: "Example3 🫧",
-        comment: `Solvable: All models correctly recognized coughs. AAD: All models incorrectly chose “Throat clearings” instead of (e) None of the above—this is a shared blind spot when the correct class is missing. IAQD: Qwen2.5-Omni, Gemini-2.5-Flash, GPT-4o-Audio, and BALSa-MA answered (e) Unanswerable; Audio Flamingo 3 hallucinated a drink (“Vin Blanc”). IASD: All except Audio Flamingo 3 chose (e) None of the above; Audio Flamingo 3 guessed “Cat.” Overall: The AAD case is the hardest here (universal failure), while most models handle IAQD/IASD well; Audio Flamingo 3 again shows the most hallucinations.`,
-        blocks: [
-          {
-            label: "Non-Verbal Human Sound Track → Solvable",
-            type: "Solvable",
-            source: "VocalSound",
-            question: `What non-verbal human sound is heard in the audio? (a) Laughter (b) Coughs (c) Sniffs (d) Sighs (e) Sneezes
-Please select one from the options provided.`,
-            audio: "assets/audios/m1553_0_cough.wav",
-            models: [
-              { name: "Qwen2.5-Omni", resp: `(b) Coughs)` },
-              { name: "Audio Flamingo 3", resp: `(B) Coughs` },
-              { name: "Gemini-2.5-Flash", resp: `The correct answer is (b) Coughs.` },
-              { name: "GPT-4o-Audio", resp: `The non-verbal human sound heard in the audio is (b) Coughs.` },
-              { name: "BALSa-MA", resp: `The non-verbal human sound heard in the audio is **coughs**. 
-
-Correct answer: **(b) Coughs**.` },
-            ],
-          },
-          {
-            label: "Non-Verbal Human Sound Track → AAD",
-            question: `Based on the audio, which human sound is being made? (a) Sniffs (b) Sighs (c) Throat clearings (d) Sneezes (e) None of the above
-Choose one of the options listed above.`,
-            type: "AAD",
-            source: "VocalSound",
-            audio: "assets/audios/m1553_0_cough.wav",
-            models: [
-              { name: "Qwen2.5-Omni", resp: `(c) Throat clearings)` },
-              { name: "Audio Flamingo 3", resp: `(C) Throat clearings` },
-              { name: "Gemini-2.5-Flash", resp: `The human sound being made is **(c) Throat clearings**.` },
-              { name: "GPT-4o-Audio", resp: `The sound is (c) Throat clearings.` },
-              { name: "BALSa-MA", resp: `(c) Throat clearings` },
-            ],
-          },
-          {
-            label: "Non-Verbal Human Sound Track → IASD",
-            question: `Identify the non-verbal sound present in the clip. (a) Lion (b) Frog (c) Cat (d) Hen (e) None of the above
-Pick one option to answer the question.`,
-            type: "IASD",
-            source: "VocalSound",
-            audio: "assets/audios/m1553_0_cough.wav",
-            models: [
-              { name: "Qwen2.5-Omni", resp: `(e) None of the above` },
-              { name: "Audio Flamingo 3", resp: `(C) Cat` },
-              { name: "Gemini-2.5-Flash", resp: `The non-verbal sound present in the clip is a cough. Therefore, the correct option is **(e) None of the above**.` },
-              { name: "GPT-4o-Audio", resp: `The sound in the clip is a cough, which does not match any of the animal sounds listed. Therefore, the correct option is (e) None of the above.` },
-              { name: "BALSa-MA", resp: `(e) None of the above
-
-The sound described is a "cough," which is not associated with any of the options listed (lion, frog, cat, or hen). Therefore, the correct answer is (e) None of the above.` },
-            ],
-          },
-          {
-            label: "Non-Verbal Human Sound Track → IAQD",
-            question: `Based on the audio, what is the speaker drinking? (a) Matcha (b) Latte (c) Vin Blanc (d) Cappuccino (e) Unanswerable
-Select your answer from the options given.`,
-            type: "IAQD",
-            source: "VocalSound",
-            audio: "assets/audios/m1553_0_cough.wav",
-            models: [
-              { name: "Qwen2.5-Omni", resp: `(e) Unanswerable` },
-              { name: "Audio Flamingo 3", resp: `(C) Vin Blanc` },
-              { name: "Gemini-2.5-Flash", resp: `(e) Unanswerable` },
-              { name: "GPT-4o-Audio", resp: `It’s unanswerable based on the audio alone.` },
-              { name: "BALSa-MA", resp: `(e) Unanswerable
-
-The audio provided is a single "cough," which does not provide any information about what the speaker is drinking. Therefore, the answer is unanswerable based on the given audio.` },
-            ],
-          },
-        ],
-      },
-      {
-        id: 4,
-        title: "Example4 (MMAU) 🎯",
-        comment: `Solvable: The best-supported answer is “Radio,” chosen by Gemini-2.5-Flash, GPT-4o-Audio, and BALSa-MA; Qwen2.5-Omni and Audio Flamingo 3 picked “Fire truck,” likely confusing siren-like cues with music source. AAD: Gemini-2.5-Flash, GPT-4o-Audio, and BALSa-MA correctly selected (d) None of the above; Qwen2.5-Omni and Audio Flamingo 3 chose listed sources incorrectly. IAQD: Qwen2.5-Omni, Gemini-2.5-Flash, GPT-4o-Audio, and BALSa-MA answered (e) Unanswerable; Audio Flamingo 3 guessed a brand (Sony). IASD: All except Audio Flamingo 3 correctly chose (d) None of the above; Audio Flamingo 3 selected an architect, showing option-schema failure. Overall: Most models are steady on IAQD/IASD and reasonable on solvables; Audio Flamingo 3 repeatedly hallucinates specifics in unanswerable settings.`,
-        blocks: [
-          {
-            label: "MMAU Track → Solvable",
-            type: "Solvable",
-            question: `Based on the given audio, identify the source of the music. (a) Radio (b) Fire truck (c) Construction site (d) Airplane`,
-            audio: "assets/audios/6aee68bf-6629-442b-981d-ae8195597c8e.wav",
-            source: "MMAU",
-            models: [
-              { name: "Qwen2.5-Omni", resp: `(b) Fire truck` },
-              { name: "Audio Flamingo 3", resp: `(B) Fire truck` },
-              { name: "Gemini-2.5-Flash", resp: `(a) Radio` },
-              { name: "GPT-4o-Audio", resp: `It sounds like the music is coming from a radio.` },
-              { name: "BALSa-MA", resp: `(a) Radio
-
-The music described is instrumental and has a wide, sustained melody with a slow tempo, which is characteristic of a radio broadcast. The other options (fire truck, construction site, airplane) typically have more specific and distinct sounds that do not match the described music.` },
-            ],
-          },
-          {
-            label: "MMAU Track → AAD",
-            type: "AAD",
-            question: `Based on the given audio, identify the source of the music. (a) Airplane (b) Construction site (c) Fire truck (d) None of the above`,
-            audio: "assets/audios/6aee68bf-6629-442b-981d-ae8195597c8e.wav",
-            source: "MMAU",
-            models: [
-              { name: "Qwen2.5-Omni", resp: `(c) Fire truck` },
-              { name: "Audio Flamingo 3", resp: `(A) Airplane` },
-              { name: "Gemini-2.5-Flash", resp: `(d) None of the above` },
-              { name: "GPT-4o-Audio", resp: `The source of the music is (d) None of the above.` },
-              { name: "BALSa-MA", resp: `(d) None of the above
-
-The music described is a classical orchestral piece with strings, woodwinds, and brass, which does not match the sounds of an airplane, construction site, or fire truck.` },
-            ],
-          },
-          {
-            label: "MMAU Track → IASD",
-            type: "IASD",
-            question: `Based on the given audio, identify the source of the music. (a) I. M. Pei (b) Antoni Gaudí (c) Le Corbusier (d) None of the above`,
-            audio: "assets/audios/6aee68bf-6629-442b-981d-ae8195597c8e.wav",
-            source: "MMAU",
-            models: [
-              { name: "Qwen2.5-Omni", resp: `(d) None of the above)` },
-              { name: "Audio Flamingo 3", resp: `(A) I. M. Pei` },
-              { name: "Gemini-2.5-Flash", resp: `The music in the audio is the main theme from *Star Wars*, composed by John Williams.
-
-The options provided (I. M. Pei, Antoni Gaudí, Le Corbusier) are all renowned architects, not composers. Therefore, none of them are the source of the music.
-
-The correct answer is (d) None of the above.` },
-              { name: "GPT-4o-Audio", resp: `The names listed are famous architects, not musicians or composers. Therefore, the correct answer is (d) None of the above.` },
-              { name: "BALSa-MA", resp: `(d) None of the above
-
-The music described is a classical orchestral piece with a wide, sustained string melody and a powerful brass section, which does not correspond to the architectural styles or works of I. M. Pei, Antoni Gaudí, or Le Corbusier. These individuals are known for their architectural contributions, not for composing music.` },
-            ],
-          },
-          {
-            label: "MMAU Track → IAQD",
-            type: "IAQD",
-            source: "MMAU",
-            question: `Based on the given audio, identify the brand of the device playing the music. (a) Sony (b) Samsung (c) Apple (d) Bose (e) Unanswerable`,
-            audio: "assets/audios/6aee68bf-6629-442b-981d-ae8195597c8e.wav",
-            models: [
-              { name: "Qwen2.5-Omni", resp: `e` },
-              { name: "Audio Flamingo 3", resp: `(A) Sony` },
-              { name: "Gemini-2.5-Flash", resp: `(e) Unanswerable` },
-              { name: "GPT-4o-Audio", resp: `e) Unanswerable` },
-              { name: "BALSa-MA", resp: `(e) Unanswerable
-
-The audio describes a classical music piece with a slow tempo, strings, and a piano, but it does not provide any information that would allow identification of the brand of the device playing the music.` },
-            ],
-          },
-        ],
-      },
-    ];
-
-    const root = document.getElementById('root');
-
-    function renderBlock(block, fallbackAudio){
-      const tagClass = {
-        Solvable: "is-danger",
-        AAD: "is-warning",
-        IASD: "is-info",
-        IAQD: "is-success"
-      }[block.type] || "is-light";
-      const audioSrc = block.audio && block.audio.trim() !== '' ? block.audio : (fallbackAudio || '');
-      return `
-        <div class="subcard">
-          <p class="has-text-weight-semibold">${block.label}</p>
-          <p class="mb-2 question-text"><span class="tag ${tagClass}">${block.type || ""}</span><br>${block.question}</p>
-          ${audioSrc ? `<audio controls preload="none"><source src="${audioSrc}"></audio>` : ''}
-          <p class="mb-2 question-text"><br>Audio Source: ${block.source}</p>
-          <div class="table-container mt-3">
-            <table class="table is-fullwidth is-compact">
-              <thead><tr><th style="width: 180px;">Model</th><th>Response</th></tr></thead>
-              <tbody>
-                ${block.models.map(m => `
-                  <tr>
-                    <td><span class="model-pill" data-model="${m.name}">${m.name}</span></td>
-                    <td class="response-cell">${m.resp}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
-        </div>`;
-    }
-
-    function renderExample(ex){
-    const firstAudio = ex.blocks.find(b=>b.audio && b.audio.trim()!=='')?.audio || '';
-      return `
-        <div class="card">
-          <div class="card-content">
-            <h2 class="title is-4">#${ex.id}. ${ex.title}</h2>
-            ${ex.blocks.map(b => renderBlock(b, firstAudio)).join('')}
-            <div class="comment-box mt-4">
-              <b>Comment:</b> ${ex.comment || "（尚未填寫）"}
-            </div>
-          </div>
-        </div>`;
-  }
-
-    root.innerHTML = EXAMPLES.map(renderExample).join('');
-  </script>
-
-  <section class="section">
-    <div class="container">
-      <h2 class="title is-3">Experimental Results</h2>
-      <div class="card">
-        <div class="card-content">
-          <figure class="subcard">
-            <img src="assets/images/main-results.png" alt="Overall Results">
+  <!-- ================= RESULTS ================= -->
+  <section id="results" class="sec">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="sec-kicker">04</span>
+        <h2 class="sec-title">Experimental Results</h2>
+      </div>
+      <p class="zoom-hint"><i class="fas fa-magnifying-glass-plus"></i> Click any figure to enlarge</p>
+      <div class="columns is-multiline">
+        <div class="column is-6">
+          <figure class="fig card-soft" style="height:100%;padding:1rem;">
+            <img src="assets/images/main-results.png" alt="Overall accuracy results">
             <figcaption>Figure 2. Overall accuracy on solvable vs. unanswerable questions.</figcaption>
           </figure>
-
-          <figure class="subcard">
-            <img src="assets/images/ablation.png" alt="Category Breakdown">
-            <figcaption>Figure 3. To further probe these behaviors, we also explored the effect of including explicit guidance in the prompt. 
-                For instance, we appended instructions such as, ``Select None of the above if you believe none of the listed answers are right'' for AAD and IASD tasks, 
-                or ``Pick Unanswerable when the audio lacks the details needed to decide'' for IAQD tasks. 
-                We observed a universal improvement in performance across all models.</figcaption>
+        </div>
+        <div class="column is-6">
+          <figure class="fig card-soft" style="height:100%;padding:1rem;">
+            <img src="assets/images/ablation.png" alt="Effect of explicit guidance prompts">
+            <figcaption>Figure 3. Adding explicit guidance to the prompt — e.g. “Select <i>None of the above</i> if you believe none of the listed answers are right” (AAD / IASD), or “Pick <i>Unanswerable</i> when the audio lacks the details needed to decide” (IAQD) — yields a universal improvement across all models.</figcaption>
           </figure>
         </div>
       </div>
     </div>
   </section>
 
-  <section class="section">
-    <div class="container">
-      <h2 class="title is-3">Data Construction</h2>
-      <p class="subtitle is-6">
-        AQUA-Bench includes solvable and unanswerable tasks generated under three systematic settings: AAD, IASD, and IAQD. 
-        Below we describe the design process and semantic distractors.
+  <!-- ================= DATA CONSTRUCTION ================= -->
+  <section id="data" class="sec">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="sec-kicker">05</span>
+        <h2 class="sec-title">Data Construction</h2>
+      </div>
+      <p class="lead" style="margin-bottom:1.2rem;">
+        AQUA-Bench builds solvable and unanswerable tasks under three systematic settings (AAD, IASD, IAQD).
+        Below are the base classes, question templates, and the semantic distractors used to generate the
+        mismatched option sets.
       </p>
-      <!-- Keep your existing content for animal/vocal/instrument sections -->
-       <!-- Animal Sounds -->
-    <div class="content">
-        <h3 class="title is-4">1. Animal Sounds</h3>
-        <p><strong>Base Classes:</strong> Dog, Rooster, Pig, Cow, Frog, Cat, Hen, Sheep, Crow.</p>
-        <p><strong>Verb to Animal Mapping:</strong>
-            barking → Dog, meowing → Cat, oinking → Pig, mooing → Cow, croaking → Frog,
-            clucking → Hen, chirping → Bird, crowing → Rooster, bleating → Sheep, cawing → Crow.
-        </p>
-        <p><strong>Standard Question Templates:</strong></p>
-        <pre><code>
+
+      <div class="card-soft prose">
+        <!-- Animal -->
+        <h3>1 · Animal Sounds</h3>
+        <p><strong>Base classes:</strong></p>
+        <div class="chips-inline">
+          <span>Dog</span><span>Rooster</span><span>Pig</span><span>Cow</span><span>Frog</span><span>Cat</span><span>Hen</span><span>Sheep</span><span>Crow</span>
+        </div>
+        <p><strong>Verb → animal mapping:</strong> barking → Dog, meowing → Cat, oinking → Pig, mooing → Cow,
+           croaking → Frog, clucking → Hen, chirping → Bird, crowing → Rooster, bleating → Sheep, cawing → Crow.</p>
+        <details>
+          <summary>Question &amp; IAQD templates</summary>
+          <pre><code>Standard question templates
 (1) What animal is {verb} in the audio?
 (2) Which animal is responsible for the {verb} sound in the clip?
 (3) What animal can be heard {verb} in the recording?
@@ -617,20 +603,18 @@ The audio describes a classical music piece with a slow tempo, strings, and a pi
 (12) Can you tell which animal is {verb} in the recording?
 (13) Which creature is responsible for the {verb} sound?
 (14) Listen to the clip — what animal is {verb}?
-(15) What creature is making the {verb} noise in the audio?</code></pre>
-  
-        <p><strong>IAQD Templates:</strong></p>
-        <pre><code>
+(15) What creature is making the {verb} noise in the audio?
+
+IAQD templates
 (1) What color is the animal that is {verb}?
 (2) Where is the animal that is {verb} located?
 (3) What object is near the {verb} animal?
 (4) What emotion does the {verb} animal express?
 (5) What does the animal that is {verb} look like?</code></pre>
-  
+        </details>
         <details>
-          <summary><strong>Semantic Distractors (👈 Expand Full List)</strong></summary>
-          <pre><code>
-animal = Dog, Rooster, Pig, Cow, Frog, Cat, Hen, Sheep, Crow
+          <summary>Semantic distractors (full list)</summary>
+          <pre><code>animal = Dog, Rooster, Pig, Cow, Frog, Cat, Hen, Sheep, Crow
 profession = Doctor, Teacher, Nurse, Pilot, Police, Fireman, Chef, Farmer, Builder
 color = Red, Blue, Green, Yellow, Black, White, Orange, Purple, Pink, Brown, Gray
 object = Table, Chair, Phone, Bottle, Book, Cup, Computer, Refrigerator, Flower, Fence
@@ -645,36 +629,34 @@ clothing = Kimono, Yukata, Beret, Tabi, Loafer, Happi, Shirt, Jumper, T-shirt, B
 city = Tokyo, Kyoto, Osaka, Hiroshima, Sapporo, Rome, Paris, Venice, Milan, Barcelona, Lyon, Istanbul, Bangkok, Ho Chi Minh City, Hanoi, Phnom Penh, Vientiane
 vehicle = Car, Truck, Bike, Bus, Boat, Plane, Train, Motorcycle, Tractor, Horse-drawn cart
 game = Soccer, Basketball, Tennis, Baseball, Tag, Hide and seek, Racing, Swimming, Water polo
-book = Manga, Comic, Novel, Magazine, Textbook, Dictionary, Encyclopedia, Cookbook, Travel guide, Art book, Science book, History book, Biography, Self-help book, Horror book, Romance book, Science fiction book, Fantasy book, Mystery book, Thriller book
-          </code></pre>
+book = Manga, Comic, Novel, Magazine, Textbook, Dictionary, Encyclopedia, Cookbook, Travel guide, Art book, Science book, History book, Biography, Self-help book, Horror book, Romance book, Science fiction book, Fantasy book, Mystery book, Thriller book</code></pre>
         </details>
-      </div>
-  
-      <!-- Vocal Sounds -->
-      <div class="content">
-        <h3 class="title is-4">2. Vocal (Non-verbal Human) Sounds</h3>
-        <p><strong>Base Classes:</strong> Laughter, Sighs, Coughs, Throat Clearings, Sneezes, Sniffs.</p>
-  
-        <p><strong>Standard Question Templates:</strong></p>
-        <pre><code>
+
+        <!-- Vocal -->
+        <h3>2 · Vocal (Non-verbal Human) Sounds</h3>
+        <p><strong>Base classes:</strong></p>
+        <div class="chips-inline">
+          <span>Laughter</span><span>Sighs</span><span>Coughs</span><span>Throat Clearings</span><span>Sneezes</span><span>Sniffs</span>
+        </div>
+        <details>
+          <summary>Question &amp; IAQD templates</summary>
+          <pre><code>Standard question templates
 (1) What non-verbal human sound is heard in the audio?
 (2) Which non-speech vocal sound can be heard in the recording?
 (3) Identify the non-verbal sound present in the clip.
 (4) Based on the audio, which human sound is being made?
-(5) Based on the audio, which human sound is being made?
-(6) Which of the following non-verbal sounds is heard in the clip?
-(7) From the sound in the clip, what non-speech sound do you recognize?
-(8) Can you tell which non-verbal expression is present in the recording?
-(9) Which non-verbal human sound is responsible for the noise in the audio?
-(10) Listen to the clip — what type of non-speech sound is being made?
-(11) The sound in the audio corresponds to which kind of human vocalization?
-(12) Which non-verbal vocalization is heard in the recording?
-(13) Which type of non-speech human sound appears in the audio?
-(14) What non-verbal sound is featured in the clip?
-(15) What kind of human expression is being produced in this audio segment?</code></pre>
-  
-        <p><strong>IAQD Templates:</strong></p>
-        <pre><code>
+(5) Which of the following non-verbal sounds is heard in the clip?
+(6) From the sound in the clip, what non-speech sound do you recognize?
+(7) Can you tell which non-verbal expression is present in the recording?
+(8) Which non-verbal human sound is responsible for the noise in the audio?
+(9) Listen to the clip — what type of non-speech sound is being made?
+(10) The sound in the audio corresponds to which kind of human vocalization?
+(11) Which non-verbal vocalization is heard in the recording?
+(12) Which type of non-speech human sound appears in the audio?
+(13) What non-verbal sound is featured in the clip?
+(14) What kind of human expression is being produced in this audio segment?
+
+IAQD templates
 (1) What color is the person in the audio wearing?
 (2) Where is the person located in the recording?
 (3) Which city is the speaker in?
@@ -688,10 +670,10 @@ book = Manga, Comic, Novel, Magazine, Textbook, Dictionary, Encyclopedia, Cookbo
 (11) What game is the speaker playing?
 (12) What is the person reading?
 (13) What is the person's job?</code></pre>
+        </details>
         <details>
-          <summary><strong>Semantic Distractors (👈 Expand Full List)</strong></summary>
-          <pre><code>
-vocal_sound = Laughter, Sighs, Coughs, Throat Clearings, Sneezes, Sniffs
+          <summary>Semantic distractors (full list)</summary>
+          <pre><code>vocal_sound = Laughter, Sighs, Coughs, Throat Clearings, Sneezes, Sniffs
 animal = Dog, Cat, Frog, Cow, Pig, Horse, Sheep, Hen, Bird, Lion
 profession = Doctor, Teacher, Nurse, Pilot, Police, Fireman, Chef, Farmer, Builder
 color = Red, Blue, Green, Yellow, Black, White, Orange, Purple, Pink, Brown, Gray
@@ -707,24 +689,24 @@ clothing = Kimono, Yukata, Beret, Tabi, Loafer, Happi, Shirt, Jumper, T-shirt, B
 city = Tokyo, Kyoto, Osaka, Hiroshima, Sapporo, Rome, Paris, Venice, Milan, Barcelona, Lyon, Istanbul, Bangkok, Ho Chi Minh City, Hanoi, Phnom Penh, Vientiane
 vehicle = Car, Truck, Bike, Bus, Boat, Plane, Train, Motorcycle, Tractor, Horse-drawn cart
 game = Soccer, Basketball, Tennis, Baseball, Tag, Hide and seek, Racing, Swimming, Water polo
-book = Manga, Comic, Novel, Magazine, Textbook, Dictionary, Encyclopedia, Cookbook, Travel guide, Art book, Science book, History book, Biography, Self-help book, Horror book, Romance book, Science fiction book, Fantasy book, Mystery book, Thriller book
-          </code></pre>
+book = Manga, Comic, Novel, Magazine, Textbook, Dictionary, Encyclopedia, Cookbook, Travel guide, Art book, Science book, History book, Biography, Self-help book, Horror book, Romance book, Science fiction book, Fantasy book, Mystery book, Thriller book</code></pre>
         </details>
-      </div>
-  
-      <!-- Music Instruments -->
-      <div class="content">
-        <h3 class="title is-4">3. Musical Instruments</h3>
-        <p><strong>Base Classes:</strong> Piano, Acoustic Guitar, Drum Set, Violin, Flute, Saxophone, Clarinet, Trumpet, Keyboard, Harmonica.</p>
-  
-        <p><strong>Standard Question Templates:</strong></p>
-        <pre><code>
+
+        <!-- Instruments -->
+        <h3>3 · Musical Instruments</h3>
+        <p><strong>Base classes:</strong></p>
+        <div class="chips-inline">
+          <span>Piano</span><span>Acoustic Guitar</span><span>Drum Set</span><span>Violin</span><span>Flute</span><span>Saxophone</span><span>Clarinet</span><span>Trumpet</span><span>Keyboard</span><span>Harmonica</span>
+        </div>
+        <details>
+          <summary>Question &amp; IAQD templates</summary>
+          <pre><code>Standard question templates
 (1) What musical instrument sound is heard in the audio?
 (2) Which instrumental sound can be heard in the recording?
 (3) Identify the musical instrument present in the clip.
 (4) Based on the audio, which instrument is being played?
 (5) Which of the following instrument sounds is heard in the clip?
-(6)From the sound in the clip, what musical instrument do you recognize?
+(6) From the sound in the clip, what musical instrument do you recognize?
 (7) Can you tell which instrument is present in the recording?
 (8) Which musical instrument is responsible for the sound in the audio?
 (9) Listen to the clip — what type of instrument sound is being played?
@@ -732,9 +714,9 @@ book = Manga, Comic, Novel, Magazine, Textbook, Dictionary, Encyclopedia, Cookbo
 (11) Which instrument sound is heard in the recording?
 (12) Which type of instrumental sound appears in the audio?
 (13) What musical instrument sound is featured in the clip?
-(14) What kind of instrument is being played in this audio segment?</code></pre>
-        <p><strong>IAQD Templates:</strong></p>
-        <pre><code>
+(14) What kind of instrument is being played in this audio segment?
+
+IAQD templates
 (1) What color is the musical instrument in the audio?
 (2) Where is the musical instrument located in the recording?
 (3) Which city is the musical instrument in?
@@ -745,11 +727,10 @@ book = Manga, Comic, Novel, Magazine, Textbook, Dictionary, Encyclopedia, Cookbo
 (8) What kind of vehicle is the instrument being transported with?
 (9) What is the profession of the performer?
 (10) What does the performer look like or wear?</code></pre>
-  
+        </details>
         <details>
-          <summary><strong>Semantic Distractors (👈 Expand Full List)</strong></summary>
-          <pre><code>
-music_instrument = Piano, Acoustic Guitar, Drum set, Violin, Flute, Saxophone, Clarinet, Trumpet, Keyboard, Harmonica
+          <summary>Semantic distractors (full list)</summary>
+          <pre><code>music_instrument = Piano, Acoustic Guitar, Drum set, Violin, Flute, Saxophone, Clarinet, Trumpet, Keyboard, Harmonica
 vocal_sound = Laughter, Sighs, Coughs, Throat Clearings, Sneezes, Sniffs
 animal = Dog, Cat, Frog, Cow, Pig, Horse, Sheep, Hen, Bird, Lion
 profession = Doctor, Teacher, Nurse, Pilot, Police, Fireman, Chef, Farmer, Builder
@@ -769,47 +750,461 @@ game = Soccer, Basketball, Tennis, Baseball, Tag, Hide and seek, Racing, Swimmin
 book = Manga, Comic, Novel, Magazine, Textbook, Dictionary, Encyclopedia, Cookbook, Travel guide, Art book, Science book, History book, Biography, Self-help book, Horror book, Romance book, Science fiction book, Fantasy book, Mystery book, Thriller book
 player_identity = (placeholder identities)
 owner_identity = (placeholder identities)
-player_appearance = (placeholder attributes)
-          </code></pre>
+player_appearance = (placeholder attributes)</code></pre>
         </details>
-      </div>
-  
-      <!-- Guidance Prompts -->
-      <div class="content">
-        <h3 class="title is-4">4. Guidance Prompts</h3>
-        <p>All questions are paired with short instructions to standardize model behavior:</p>
-        <pre><code>
-(1) Please select one from the options provided.
+
+        <!-- Guidance -->
+        <h3>4 · Guidance Prompts</h3>
+        <p>Every question is paired with a short instruction to standardize model behavior:</p>
+        <pre><code>(1) Please select one from the options provided.
 (2) Choose one of the options listed above.
 (3) Pick one option to answer the question.
 (4) Select your answer from the options given.
 (5) Choose one of the choices shown.
 (6) You may pick one from the provided options.
 (7) Make your choice from the options above.
-(8) Pick your answer from the choices provided.
-</code></pre>
+(8) Pick your answer from the choices provided.</code></pre>
+      </div>
     </div>
   </section>
 
-  <section class="section has-background-white">
-    <div class="container">
-      <h2 class="title is-4">References</h2>
-      <div class="content">
+  <!-- ================= CITATION ================= -->
+  <section id="cite" class="sec">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="sec-kicker">06</span>
+        <h2 class="sec-title">Citation</h2>
+      </div>
+      <div class="card-soft cite-box">
+        <button class="copy-btn" id="copyCite"><i class="fas fa-copy"></i> Copy</button>
+<pre id="bibtex"><code>@inproceedings{kuan2026aqua,
+  title     = {AQUA-Bench: Beyond Finding Answers to Knowing When There Are None in Audio Question Answering},
+  author    = {Kuan, Chun-Yi and Lee, Hung-yi},
+  booktitle = {ICASSP 2026 - 2026 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)},
+  pages     = {16262--16266},
+  year      = {2026},
+  doi       = {10.1109/ICASSP55912.2026.11460647}
+}</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= REFERENCES ================= -->
+  <section id="refs" class="sec">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="sec-kicker">07</span>
+        <h2 class="sec-title">References</h2>
+      </div>
+      <div class="card-soft refs">
         <ol>
-            <li>Arushi Goel et al. <i>Audio Flamingo 3: Advancing Audio Intelligence with Fully Open Large Audio Language Models</i>. arXiv preprint arXiv:2507.08128, 2025.</li>
-            <li>Jin Xu et al. <i>Qwen2.5-omni technical report</i>. arXiv preprint arXiv:2503.20215, 2025.</li>
-            <li>Gheorghe Comanici et al. <i>Gemini 2.5: Pushing the frontier with advanced reasoning, multimodality, long context, and next generation agentic capabilities</i>. arXiv preprint arXiv:2507.06261, 2025.</li>
-            <li>Josh Achiam et al. <i>GPT-4 technical report</i>. arXiv preprint arXiv:2303.08774, 2023.</li>
-            <li>Karol J. Piczak. <i>ESC: Dataset for Environmental Sound Classification</i>. In Proceedings of the 23rd Annual ACM Conference on Multimedia, pp. 1015–1018. ACM, 2015.</li>
-            <li>Abdulvahap. <i>Music Instrument Sounds for Classification</i>. Available at: <a href="https://www.kaggle.com/datasets/abdulvahap/music-instrunment-sounds-for-classification">Kaggle</a>.</li>
-            <li>Yuan Gong, Jin Yu, James Glass. <i>Vocalsound: A Dataset for Improving Human Vocal Sounds Recognition</i>. In ICASSP 2022, pp. 151–155. IEEE, 2022. doi:10.1109/ICASSP43922.2022.9746828.</li>
-            <li>S. Sakshi et al. <i>MMAU: A massive multi-task audio understanding and reasoning benchmark</i>. In International Conference on Learning Representations (ICLR), 2024.</li>
-            <li>Chun-Yi Kuan, Hung-yi Lee. <i>Teaching Audio-Aware Large Language Models What Does Not Hear: Mitigating Hallucinations through Synthesized Negative Samples</i>. Interspeech 2025.</li>
-            <li>Chun-Yi Kuan, Hung-yi Lee. <i>From Alignment to Advancement: Bootstrapping Audio-Language Alignment with Synthetic Data</i>. arXiv preprint arXiv:2505.20166, 2025.</li>
+          <li>Arushi Goel et al. <i>Audio Flamingo 3: Advancing Audio Intelligence with Fully Open Large Audio Language Models.</i> arXiv:2507.08128, 2025.</li>
+          <li>Jin Xu et al. <i>Qwen2.5-Omni Technical Report.</i> arXiv:2503.20215, 2025.</li>
+          <li>Gheorghe Comanici et al. <i>Gemini 2.5: Pushing the Frontier with Advanced Reasoning, Multimodality, Long Context, and Next-Generation Agentic Capabilities.</i> arXiv:2507.06261, 2025.</li>
+          <li>Josh Achiam et al. <i>GPT-4 Technical Report.</i> arXiv:2303.08774, 2023.</li>
+          <li>Karol J. Piczak. <i>ESC: Dataset for Environmental Sound Classification.</i> ACM Multimedia, pp. 1015–1018, 2015.</li>
+          <li>Abdulvahap. <i>Music Instrument Sounds for Classification.</i> <a href="https://www.kaggle.com/datasets/abdulvahap/music-instrunment-sounds-for-classification" target="_blank" rel="noopener">Kaggle</a>.</li>
+          <li>Yuan Gong, Jin Yu, James Glass. <i>VocalSound: A Dataset for Improving Human Vocal Sounds Recognition.</i> ICASSP 2022, pp. 151–155. doi:10.1109/ICASSP43922.2022.9746828.</li>
+          <li>S. Sakshi et al. <i>MMAU: A Massive Multi-Task Audio Understanding and Reasoning Benchmark.</i> ICLR, 2024.</li>
+          <li>Chun-Yi Kuan, Hung-yi Lee. <i>Teaching Audio-Aware Large Language Models What Does Not Hear: Mitigating Hallucinations through Synthesized Negative Samples.</i> Interspeech 2025.</li>
+          <li>Chun-Yi Kuan, Hung-yi Lee. <i>From Alignment to Advancement: Bootstrapping Audio-Language Alignment with Synthetic Data.</i> arXiv:2505.20166, 2025.</li>
         </ol>
       </div>
     </div>
   </section>
+
+  <footer>
+    <p>AQUA-Bench · ICASSP 2026 (Oral) · Chun-Yi Kuan &amp; Hung-yi Lee, National Taiwan University</p>
+    <p style="margin-top:.3rem;">
+      <a href="https://arxiv.org/abs/2601.12248" target="_blank" rel="noopener">Paper</a> ·
+      <a href="https://github.com/kuan2jiu99/aqua-bench" target="_blank" rel="noopener">Code &amp; Data</a>
+    </p>
+  </footer>
+
+  <!-- ================= LIGHTBOX ================= -->
+  <div class="lightbox" id="lightbox" aria-hidden="true">
+    <button class="lb-close" aria-label="Close">&times;</button>
+    <img alt="">
+    <div class="lb-cap"></div>
+  </div>
+
+  <!-- ================= DATA + RENDER ================= -->
+  <script>
+    // Per-model verdicts (ok) are derived from the analysis notes below each example.
+    const MODEL_COLORS = {
+      "Qwen2.5-Omni":     "#9c6b3f",
+      "Audio Flamingo 3": "#a0556b",
+      "Gemini-2.5-Flash": "#5d7c8a",
+      "GPT-4o-Audio":     "#5f7257",
+      "BALSa-MA":         "#7a6aa0",
+    };
+
+    const EXAMPLES = [
+      {
+        id: 1,
+        title: "Animal Sound · Cow",
+        emoji: "🐮",
+        source: "ESC-50",
+        comment: `<b>Solvable:</b> all models correctly identified the cow; GPT-4o-Audio and BALSa-MA gave the clearest reasoning. <b>AAD:</b> Gemini-2.5-Flash, GPT-4o-Audio, and BALSa-MA correctly chose “None of the above”; Qwen2.5-Omni and Audio Flamingo 3 picked a wrong animal — difficulty when the true class is absent. <b>IASD:</b> most models recognized the incompatible options; Audio Flamingo 3 picked “River.” <b>IAQD:</b> most answered “Unanswerable”; Audio Flamingo 3 hallucinated “Cup.” <b>Overall:</b> strong on solvables; robustness gaps in AAD and when options/questions are mismatched, with Audio Flamingo 3 most prone to hallucination.`,
+        audio: "assets/audios/4-181955-C-3.wav",
+        blocks: [
+          {
+            label: "Animal Sound Track", type: "Solvable", source: "ESC-50",
+            answer: "(a) Cow",
+            question: `What animal is featured in the sound clip? (a) Cow (b) Frog (c) Hen (d) Lion (e) Bird`,
+            guide: "Choose one of the choices shown.",
+            models: [
+              { name: "Qwen2.5-Omni", ok: true,  resp: `(a) Cow)` },
+              { name: "Audio Flamingo 3", ok: true, resp: `(A) Cow` },
+              { name: "Gemini-2.5-Flash", ok: true, resp: `(a) Cow` },
+              { name: "GPT-4o-Audio", ok: true, resp: `The animal featured in the sound clip is a cow. The correct choice is (a) Cow.` },
+              { name: "BALSa-MA", ok: true, resp: `(a) Cow` },
+            ],
+          },
+          {
+            label: "Animal Sound Track", type: "AAD", source: "ESC-50",
+            answer: "(e) None of the above",
+            question: `Which of the following animals is heard in the clip? (a) Pig (b) Dog (c) Crow (d) Rooster (e) None of the above`,
+            guide: "You may pick one from the provided options.",
+            models: [
+              { name: "Qwen2.5-Omni", ok: false, resp: `(c) Crow)` },
+              { name: "Audio Flamingo 3", ok: false, resp: `(A) Pig` },
+              { name: "Gemini-2.5-Flash", ok: true, resp: `The animal heard in the clip is a **cow**.\n\nTherefore, the correct option is **(e) None of the above**.` },
+              { name: "GPT-4o-Audio", ok: true, resp: `The sound in the clip is of a cow, which is not one of the provided options. Therefore, the correct answer is (e) None of the above.` },
+              { name: "BALSa-MA", ok: true, resp: `The sound described is a **cow mooing**. Among the options provided:\n\n- (a) Hen: a hen would cluck, not moo.\n- (b) Cat: a cat would meow, not moo.\n- (c) Horse: a horse would neigh, not moo.\n- (d) Bird: a bird would chirp, not moo.\n- (e) None of the above: correct, since the sound is a cow mooing.\n\n**Answer: (e) None of the above**.` },
+            ],
+          },
+          {
+            label: "Animal Sound Track", type: "IASD", source: "ESC-50",
+            answer: "(e) None of the above",
+            question: `Based on the audio, which animal is making the noise? (a) Desert (b) Hospital (c) Mountain (d) River (e) None of the above`,
+            guide: "Make your choice from the options above.",
+            models: [
+              { name: "Qwen2.5-Omni", ok: true, resp: `(e) None of the above` },
+              { name: "Audio Flamingo 3", ok: false, resp: `(D) River` },
+              { name: "Gemini-2.5-Flash", ok: true, resp: `(e) None of the above` },
+              { name: "GPT-4o-Audio", ok: true, resp: `The sound in the audio is a cow mooing, which is not tied to any of the listed environments (desert, hospital, mountain, river). Therefore, the correct choice is (e) None of the above.` },
+              { name: "BALSa-MA", ok: true, resp: `The sound described is a cow mooing. A cow is an animal, not a desert, hospital, mountain, or river. Therefore, the correct answer is:\n\n(e) None of the above` },
+            ],
+          },
+          {
+            label: "Animal Sound Track", type: "IAQD", source: "ESC-50",
+            answer: "(e) Unanswerable",
+            question: `What item is close to the animal in the recording? (a) Book (b) Table (c) Cup (d) Flower (e) Unanswerable`,
+            guide: "Pick your answer from the choices provided.",
+            models: [
+              { name: "Qwen2.5-Omni", ok: true, resp: `(e) Unanswerable)` },
+              { name: "Audio Flamingo 3", ok: false, resp: `(C) Cup` },
+              { name: "Gemini-2.5-Flash", ok: true, resp: `(e) Unanswerable` },
+              { name: "GPT-4o-Audio", ok: true, resp: `e) Unanswerable` },
+              { name: "BALSa-MA", ok: true, resp: `The recording contains the sound of a cow mooing. Since the audio only includes the cow and no other items, it is not possible to determine what item is close to the cow.\n\nAnswer: (e) Unanswerable` },
+            ],
+          },
+        ],
+      },
+      {
+        id: 2,
+        title: "Musical Instrument · Acoustic Guitar",
+        emoji: "🎸",
+        source: "Music Instrument Sounds",
+        comment: `<b>Solvable:</b> all models correctly identified the acoustic guitar. <b>AAD:</b> only Qwen2.5-Omni and Gemini-2.5-Flash selected “None of the above”; GPT-4o-Audio and BALSa-MA misheard it as harmonica, and Audio Flamingo 3 forced “Keyboard.” <b>IASD:</b> Gemini-2.5-Flash, GPT-4o-Audio, and BALSa-MA chose “None of the above”; Qwen2.5-Omni answered “Sencha,” Audio Flamingo 3 answered “Guitar” (not an option). <b>IAQD:</b> most chose “Unanswerable”; Audio Flamingo 3 hallucinated a city (“Sapporo”). <b>Overall:</b> unanswerable handling is mixed; Gemini-2.5-Flash is most consistent, others — especially Audio Flamingo 3 — tend to overcommit.`,
+        audio: "assets/audios/Acoustic_Guitar-2940.wav",
+        blocks: [
+          {
+            label: "Musical Instrument Track", type: "Solvable", source: "Music Instrument Sounds",
+            answer: "(c) Acoustic Guitar",
+            question: `Which instrumental sound can be heard in the recording? (a) Violin (b) Trumpet (c) Acoustic Guitar (d) Harmonica (e) Saxophone`,
+            guide: "Choose one of the choices shown.",
+            models: [
+              { name: "Qwen2.5-Omni", ok: true, resp: `(c) Acoustic Guitar)` },
+              { name: "Audio Flamingo 3", ok: true, resp: `Based on the distinct plucked string sound and acoustic texture, the instrument heard is clearly an acoustic guitar. **(c) Acoustic Guitar**` },
+              { name: "Gemini-2.5-Flash", ok: true, resp: `(c) Acoustic Guitar` },
+              { name: "GPT-4o-Audio", ok: true, resp: `The instrumental sound in the recording is (c) Acoustic Guitar.` },
+              { name: "BALSa-MA", ok: true, resp: `The instrumental sound in the recording is (c) Acoustic Guitar.` },
+            ],
+          },
+          {
+            label: "Musical Instrument Track", type: "AAD", source: "Music Instrument Sounds",
+            answer: "(e) None of the above",
+            question: `Which musical instrument is responsible for the sound in the audio? (a) Harmonica (b) Keyboard (c) Flute (d) Clarinet (e) None of the above`,
+            guide: "You may pick one from the provided options.",
+            models: [
+              { name: "Qwen2.5-Omni", ok: true, resp: `(e) None of the above` },
+              { name: "Audio Flamingo 3", ok: false, resp: `The audio features a melodic line on a keyboard instrument, characteristic of a synthesizer or digital keyboard. **(b) Keyboard**` },
+              { name: "Gemini-2.5-Flash", ok: true, resp: `(e) None of the above` },
+              { name: "GPT-4o-Audio", ok: false, resp: `The sound in the audio is produced by a harmonica. So, the correct answer is (a) Harmonica.` },
+              { name: "BALSa-MA", ok: false, resp: `The sound in the audio is that of a **harmonica**, a free-reed wind instrument with a distinct, resonant tone.\n\nTherefore, the correct answer is:\n**(a) Harmonica**.` },
+            ],
+          },
+          {
+            label: "Musical Instrument Track", type: "IASD", source: "Music Instrument Sounds",
+            answer: "(e) None of the above",
+            question: `The sound in the audio corresponds to which kind of musical instrument? (a) Champagne (b) Sencha (c) Umeshu (d) Cappuccino (e) None of the above`,
+            guide: "Make your choice from the options above.",
+            models: [
+              { name: "Qwen2.5-Omni", ok: false, resp: `(b) Sencha)` },
+              { name: "Audio Flamingo 3", ok: false, resp: `The audio features a plucked string instrument with a distinct timbre, characteristic of a guitar. **(a) Guitar**` },
+              { name: "Gemini-2.5-Flash", ok: true, resp: `(e) None of the above` },
+              { name: "GPT-4o-Audio", ok: true, resp: `It sounds like a string instrument, so the correct choice is (e) None of the above.` },
+              { name: "BALSa-MA", ok: true, resp: `The sound corresponds to an **acoustic guitar**. None of the options (Champagne, Sencha, Umeshu, Cappuccino) describe it, so the correct choice is:\n\n**(e) None of the above**.` },
+            ],
+          },
+          {
+            label: "Musical Instrument Track", type: "IAQD", source: "Music Instrument Sounds",
+            answer: "(e) Unanswerable",
+            question: `Which city is the musical instrument in? (a) Osaka (b) Sapporo (c) Phnom Penh (d) Istanbul (e) Unanswerable`,
+            guide: "Pick your answer from the choices provided.",
+            models: [
+              { name: "Qwen2.5-Omni", ok: true, resp: `(e) Unanswerable` },
+              { name: "Audio Flamingo 3", ok: false, resp: `The audio features a solo acoustic guitar performance. The instrument is located in Sapporo. **(b) Sapporo**` },
+              { name: "Gemini-2.5-Flash", ok: true, resp: `The audio contains only music and no information about any city. Therefore, the question is unanswerable.\n\n(e) Unanswerable` },
+              { name: "GPT-4o-Audio", ok: true, resp: `The audio does not provide enough information to determine the city. So the answer is (e) Unanswerable.` },
+              { name: "BALSa-MA", ok: true, resp: `The audio describes an **acoustic guitar**, but there is no information indicating a specific city.\n\nTherefore, the correct answer is:\n**(e) Unanswerable**.` },
+            ],
+          },
+        ],
+      },
+      {
+        id: 3,
+        title: "Non-Verbal Human Sound · Cough",
+        emoji: "🤧",
+        source: "VocalSound",
+        comment: `<b>Solvable:</b> all models correctly recognized coughs. <b>AAD:</b> all models incorrectly chose “Throat clearings” instead of “None of the above” — a shared blind spot when the correct class is missing. <b>IASD:</b> all except Audio Flamingo 3 chose “None of the above”; Audio Flamingo 3 guessed “Cat.” <b>IAQD:</b> most answered “Unanswerable”; Audio Flamingo 3 hallucinated a drink (“Vin Blanc”). <b>Overall:</b> the AAD case is the hardest here (universal failure), while most models handle IAQD / IASD well; Audio Flamingo 3 again shows the most hallucinations.`,
+        audio: "assets/audios/m1553_0_cough.wav",
+        blocks: [
+          {
+            label: "Non-Verbal Human Sound Track", type: "Solvable", source: "VocalSound",
+            answer: "(b) Coughs",
+            question: `What non-verbal human sound is heard in the audio? (a) Laughter (b) Coughs (c) Sniffs (d) Sighs (e) Sneezes`,
+            guide: "Please select one from the options provided.",
+            models: [
+              { name: "Qwen2.5-Omni", ok: true, resp: `(b) Coughs)` },
+              { name: "Audio Flamingo 3", ok: true, resp: `(B) Coughs` },
+              { name: "Gemini-2.5-Flash", ok: true, resp: `The correct answer is (b) Coughs.` },
+              { name: "GPT-4o-Audio", ok: true, resp: `The non-verbal human sound heard in the audio is (b) Coughs.` },
+              { name: "BALSa-MA", ok: true, resp: `The non-verbal human sound heard in the audio is **coughs**.\n\nCorrect answer: **(b) Coughs**.` },
+            ],
+          },
+          {
+            label: "Non-Verbal Human Sound Track", type: "AAD", source: "VocalSound",
+            answer: "(e) None of the above",
+            question: `Based on the audio, which human sound is being made? (a) Sniffs (b) Sighs (c) Throat clearings (d) Sneezes (e) None of the above`,
+            guide: "Choose one of the options listed above.",
+            models: [
+              { name: "Qwen2.5-Omni", ok: false, resp: `(c) Throat clearings)` },
+              { name: "Audio Flamingo 3", ok: false, resp: `(C) Throat clearings` },
+              { name: "Gemini-2.5-Flash", ok: false, resp: `The human sound being made is **(c) Throat clearings**.` },
+              { name: "GPT-4o-Audio", ok: false, resp: `The sound is (c) Throat clearings.` },
+              { name: "BALSa-MA", ok: false, resp: `(c) Throat clearings` },
+            ],
+          },
+          {
+            label: "Non-Verbal Human Sound Track", type: "IASD", source: "VocalSound",
+            answer: "(e) None of the above",
+            question: `Identify the non-verbal sound present in the clip. (a) Lion (b) Frog (c) Cat (d) Hen (e) None of the above`,
+            guide: "Pick one option to answer the question.",
+            models: [
+              { name: "Qwen2.5-Omni", ok: true, resp: `(e) None of the above` },
+              { name: "Audio Flamingo 3", ok: false, resp: `(C) Cat` },
+              { name: "Gemini-2.5-Flash", ok: true, resp: `The non-verbal sound present in the clip is a cough. Therefore, the correct option is **(e) None of the above**.` },
+              { name: "GPT-4o-Audio", ok: true, resp: `The sound is a cough, which does not match any of the animal sounds listed. Therefore, the correct option is (e) None of the above.` },
+              { name: "BALSa-MA", ok: true, resp: `(e) None of the above\n\nThe sound described is a "cough," which is not associated with any of the options (lion, frog, cat, or hen).` },
+            ],
+          },
+          {
+            label: "Non-Verbal Human Sound Track", type: "IAQD", source: "VocalSound",
+            answer: "(e) Unanswerable",
+            question: `Based on the audio, what is the speaker drinking? (a) Matcha (b) Latte (c) Vin Blanc (d) Cappuccino (e) Unanswerable`,
+            guide: "Select your answer from the options given.",
+            models: [
+              { name: "Qwen2.5-Omni", ok: true, resp: `(e) Unanswerable` },
+              { name: "Audio Flamingo 3", ok: false, resp: `(C) Vin Blanc` },
+              { name: "Gemini-2.5-Flash", ok: true, resp: `(e) Unanswerable` },
+              { name: "GPT-4o-Audio", ok: true, resp: `It’s unanswerable based on the audio alone.` },
+              { name: "BALSa-MA", ok: true, resp: `(e) Unanswerable\n\nThe audio is a single "cough," which provides no information about what the speaker is drinking.` },
+            ],
+          },
+        ],
+      },
+      {
+        id: 4,
+        title: "MMAU · Music Source",
+        emoji: "🎼",
+        source: "MMAU",
+        comment: `<b>Solvable:</b> the best-supported answer is “Radio,” chosen by Gemini-2.5-Flash, GPT-4o-Audio, and BALSa-MA; Qwen2.5-Omni and Audio Flamingo 3 picked “Fire truck.” <b>AAD:</b> Gemini-2.5-Flash, GPT-4o-Audio, and BALSa-MA correctly selected “None of the above”; Qwen2.5-Omni and Audio Flamingo 3 chose listed sources incorrectly. <b>IASD:</b> all except Audio Flamingo 3 chose “None of the above”; Audio Flamingo 3 selected an architect. <b>IAQD:</b> most answered “Unanswerable”; Audio Flamingo 3 guessed a brand (Sony). <b>Overall:</b> most models are steady on IAQD / IASD and reasonable on solvables; Audio Flamingo 3 repeatedly hallucinates specifics in unanswerable settings.`,
+        audio: "assets/audios/6aee68bf-6629-442b-981d-ae8195597c8e.wav",
+        blocks: [
+          {
+            label: "MMAU Track", type: "Solvable", source: "MMAU",
+            answer: "(a) Radio",
+            question: `Based on the given audio, identify the source of the music. (a) Radio (b) Fire truck (c) Construction site (d) Airplane`,
+            models: [
+              { name: "Qwen2.5-Omni", ok: false, resp: `(b) Fire truck` },
+              { name: "Audio Flamingo 3", ok: false, resp: `(B) Fire truck` },
+              { name: "Gemini-2.5-Flash", ok: true, resp: `(a) Radio` },
+              { name: "GPT-4o-Audio", ok: true, resp: `It sounds like the music is coming from a radio.` },
+              { name: "BALSa-MA", ok: true, resp: `(a) Radio\n\nThe music is instrumental with a wide, sustained melody and slow tempo, characteristic of a radio broadcast. The other options have more distinct sounds that do not match.` },
+            ],
+          },
+          {
+            label: "MMAU Track", type: "AAD", source: "MMAU",
+            answer: "(d) None of the above",
+            question: `Based on the given audio, identify the source of the music. (a) Airplane (b) Construction site (c) Fire truck (d) None of the above`,
+            models: [
+              { name: "Qwen2.5-Omni", ok: false, resp: `(c) Fire truck` },
+              { name: "Audio Flamingo 3", ok: false, resp: `(A) Airplane` },
+              { name: "Gemini-2.5-Flash", ok: true, resp: `(d) None of the above` },
+              { name: "GPT-4o-Audio", ok: true, resp: `The source of the music is (d) None of the above.` },
+              { name: "BALSa-MA", ok: true, resp: `(d) None of the above\n\nThe music is a classical orchestral piece with strings, woodwinds, and brass, which does not match an airplane, construction site, or fire truck.` },
+            ],
+          },
+          {
+            label: "MMAU Track", type: "IASD", source: "MMAU",
+            answer: "(d) None of the above",
+            question: `Based on the given audio, identify the source of the music. (a) I. M. Pei (b) Antoni Gaudí (c) Le Corbusier (d) None of the above`,
+            models: [
+              { name: "Qwen2.5-Omni", ok: true, resp: `(d) None of the above)` },
+              { name: "Audio Flamingo 3", ok: false, resp: `(A) I. M. Pei` },
+              { name: "Gemini-2.5-Flash", ok: true, resp: `The music is the main theme from *Star Wars*, composed by John Williams. The options (I. M. Pei, Antoni Gaudí, Le Corbusier) are renowned architects, not composers.\n\nThe correct answer is (d) None of the above.` },
+              { name: "GPT-4o-Audio", ok: true, resp: `The names listed are famous architects, not composers. Therefore, the correct answer is (d) None of the above.` },
+              { name: "BALSa-MA", ok: true, resp: `(d) None of the above\n\nThe music is a classical orchestral piece, which does not correspond to the architectural works of I. M. Pei, Antoni Gaudí, or Le Corbusier.` },
+            ],
+          },
+          {
+            label: "MMAU Track", type: "IAQD", source: "MMAU",
+            answer: "(e) Unanswerable",
+            question: `Based on the given audio, identify the brand of the device playing the music. (a) Sony (b) Samsung (c) Apple (d) Bose (e) Unanswerable`,
+            models: [
+              { name: "Qwen2.5-Omni", ok: true, resp: `e` },
+              { name: "Audio Flamingo 3", ok: false, resp: `(A) Sony` },
+              { name: "Gemini-2.5-Flash", ok: true, resp: `(e) Unanswerable` },
+              { name: "GPT-4o-Audio", ok: true, resp: `e) Unanswerable` },
+              { name: "BALSa-MA", ok: true, resp: `(e) Unanswerable\n\nThe audio describes a classical music piece, but it does not provide any information to identify the brand of the playback device.` },
+            ],
+          },
+        ],
+      },
+    ];
+
+    // ---- tiny formatter: escape HTML, keep **bold** + line breaks ----
+    function fmt(s) {
+      return s
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+        .replace(/\*(.+?)\*/g, "<em>$1</em>");
+    }
+    const typeClass = { Solvable: "t-solvable", AAD: "t-aad", IASD: "t-iasd", IAQD: "t-iaqd" };
+
+    function renderBlock(block, fallbackAudio) {
+      const audioSrc = (block.audio && block.audio.trim()) ? block.audio : (fallbackAudio || "");
+      const okCount = block.models.filter(m => m.ok).length;
+      const cards = block.models.map(m => {
+        const dot = MODEL_COLORS[m.name] || "#999";
+        const v = m.ok
+          ? `<span class="verdict is-ok"><i class="fas fa-circle-check"></i> correct</span>`
+          : `<span class="verdict is-no"><i class="fas fa-circle-xmark"></i> incorrect</span>`;
+        return `
+          <div class="resp ${m.ok ? "is-ok" : "is-no"}">
+            <div class="resp-head">
+              <span class="model-pill"><span class="dot" style="background:${dot}"></span>${m.name}</span>
+              ${v}
+            </div>
+            <div class="resp-text">${fmt(m.resp)}</div>
+          </div>`;
+      }).join("");
+
+      return `
+        <div class="block" data-type="${block.type}">
+          <div class="block-head">
+            <span class="block-label">${block.label}</span>
+            <span class="tbadge ${typeClass[block.type] || ""}">${block.type}</span>
+          </div>
+          <p class="q-text">${block.question}${block.guide ? `<span class="guide">${block.guide}</span>` : ""}</p>
+          <div class="media-row">
+            ${audioSrc ? `<span class="audio-box"><i class="fas fa-volume-high"></i><audio controls preload="none" src="${audioSrc}"></audio></span>` : ""}
+            <span class="expect">Expected: <b>${block.answer}</b></span>
+            <span class="expect" style="margin-left:auto;">${okCount}/${block.models.length} models correct</span>
+          </div>
+          <div class="resp-grid">${cards}</div>
+        </div>`;
+    }
+
+    function renderExample(ex) {
+      const fallbackAudio = ex.audio || (ex.blocks.find(b => b.audio && b.audio.trim()) || {}).audio || "";
+      return `
+        <article class="ex" id="ex-${ex.id}">
+          <div class="ex-head">
+            <span class="ex-num">#${ex.id}</span>
+            <span style="font-weight:600;font-size:1.08rem;">${ex.title} ${ex.emoji || ""}</span>
+            <span class="ex-src"><i class="fas fa-compact-disc"></i> ${ex.source}</span>
+          </div>
+          ${ex.blocks.map(b => renderBlock(b, fallbackAudio)).join("")}
+          <div class="analysis">
+            <span class="a-title"><i class="fas fa-feather"></i> Analysis</span>
+            ${ex.comment}
+          </div>
+        </article>`;
+    }
+
+    document.getElementById("root").innerHTML = EXAMPLES.map(renderExample).join("");
+
+    // ---- filter chips ----
+    const root = document.getElementById("root");
+    document.getElementById("controls").addEventListener("click", (e) => {
+      const chip = e.target.closest(".chip");
+      if (!chip) return;
+      document.querySelectorAll("#controls .chip").forEach(c => c.classList.remove("is-on"));
+      chip.classList.add("is-on");
+      const f = chip.dataset.filter;
+      root.querySelectorAll(".block").forEach(b => {
+        b.style.display = (f === "all" || b.dataset.type === f) ? "" : "none";
+      });
+    });
+
+    // ---- copy bibtex ----
+    const copyBtn = document.getElementById("copyCite");
+    copyBtn.addEventListener("click", () => {
+      const text = document.getElementById("bibtex").innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied';
+        setTimeout(() => { copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy'; }, 1600);
+      });
+    });
+
+    // ---- active nav link on scroll ----
+    const navLinks = [...document.querySelectorAll(".topnav a.navlink")];
+    const sections = navLinks.map(a => document.querySelector(a.getAttribute("href"))).filter(Boolean);
+    const byId = {};
+    navLinks.forEach(a => byId[a.getAttribute("href").slice(1)] = a);
+    if ("IntersectionObserver" in window) {
+      const obs = new IntersectionObserver((entries) => {
+        entries.forEach(en => {
+          if (en.isIntersecting) {
+            navLinks.forEach(a => a.classList.remove("is-active"));
+            const link = byId[en.target.id];
+            if (link) link.classList.add("is-active");
+          }
+        });
+      }, { rootMargin: "-45% 0px -50% 0px", threshold: 0 });
+      sections.forEach(s => obs.observe(s));
+    }
+
+    // ---- figure lightbox (click to enlarge / close) ----
+    const lb = document.getElementById("lightbox");
+    const lbImg = lb.querySelector("img");
+    const lbCap = lb.querySelector(".lb-cap");
+    function openLb(src, cap) { lbImg.src = src; lbCap.textContent = cap || ""; lb.classList.add("open"); }
+    function closeLb() { lb.classList.remove("open"); lbImg.src = ""; }
+    document.querySelectorAll("figure.fig img").forEach(img => {
+      img.classList.add("zoomable");
+      img.addEventListener("click", () => {
+        const cap = img.closest("figure")?.querySelector("figcaption")?.textContent || img.alt;
+        openLb(img.src, cap);
+      });
+    });
+    lb.addEventListener("click", (e) => { if (e.target !== lbImg) closeLb(); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeLb(); });
+  </script>
 
 </body>
 </html>
